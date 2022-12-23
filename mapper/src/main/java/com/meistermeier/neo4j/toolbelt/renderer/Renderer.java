@@ -18,6 +18,9 @@ import java.util.Map;
  */
 public class Renderer {
 
+	/**
+	 * A prepared {@link Renderer} instance.
+	 */
 	public final static Renderer INSTANCE = new Renderer();
 
 	private final ObjectMapper mapper;
@@ -27,10 +30,27 @@ public class Renderer {
 		mapper.registerModule(new Neo4jDriverModule());
 	}
 
+	/**
+	 * Renders the provided object into a map of parameters.
+	 * Will use the default name `rows` if the instance is of type {@link Collection}
+	 *
+	 * @param instance Instance of the object to render.
+	 * @param <T>      Type of instance.
+	 * @return map of parameters
+	 */
 	public <T> Value toParameters(T instance) {
 		return toParameters(instance, "rows");
 	}
 
+	/**
+	 * Renders the provided object into a map of parameters.
+	 * Will use the provided {@code collectionName} if the instance is of type {@link Collection}
+	 *
+	 * @param instance       Instance of the object to render.
+	 * @param collectionName Name of a collection, if the instance is of type {@link Collection}
+	 * @param <T>            Type of instance.
+	 * @return map of parameters
+	 */
 	public <T> Value toParameters(T instance, String collectionName) {
 
 		if (Collection.class.isAssignableFrom(instance.getClass())) {

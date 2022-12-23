@@ -7,6 +7,11 @@ package com.meistermeier.neo4j.toolbelt.conversion;
  */
 public class ConversionException extends RuntimeException {
 
+	/**
+	 * Default constructor that redirects to the generic {@link RuntimeException}.
+	 *
+	 * @param message Exception message
+	 */
 	public ConversionException(String message) {
 		super(message);
 	}

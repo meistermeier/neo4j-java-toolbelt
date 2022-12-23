@@ -35,7 +35,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Person) return p").single();
-			Function<Record, Person> personConverter = mapper.createConverterFor(Person.class);
+			Function<Record, Person> personConverter = mapper.createMapperFor(Person.class);
 
 			Person person = personConverter.apply(singleNode);
 
@@ -54,7 +54,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			List<Person> people = session.run("MATCH (p:Person) return p")
-					.list(mapper.createConverterFor(Person.class));
+					.list(mapper.createMapperFor(Person.class));
 
 			logOutput(people);
 		}
@@ -67,7 +67,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			Record personCollectionRecord = session.run("MATCH (p:Person) return collect(p)").single();
-			Iterable<Person> people = mapper.createCollectionConverterFor(Person.class).apply(personCollectionRecord);
+			Iterable<Person> people = mapper.createCollectionMapperFor(Person.class).apply(personCollectionRecord);
 
 			logOutput(people);
 		}
@@ -80,7 +80,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			List<Iterable<Person>> people = session.run("MATCH (p:Person) return collect(p)")
-					.list(mapper.createCollectionConverterFor(Person.class));
+					.list(mapper.createCollectionMapperFor(Person.class));
 
 			logOutput(people);
 		}
@@ -92,7 +92,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Person) return p{.name, .yearBorn}").single();
-			Person person = mapper.createConverterFor(Person.class).apply(singleNode);
+			Person person = mapper.createMapperFor(Person.class).apply(singleNode);
 
 			logOutput(person);
 		}
@@ -104,7 +104,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Person) return p.name as name, p.yearBorn as yearBorn").single();
-			Person person = mapper.createConverterFor(Person.class).apply(singleNode);
+			Person person = mapper.createMapperFor(Person.class).apply(singleNode);
 
 			logOutput(person);
 		}

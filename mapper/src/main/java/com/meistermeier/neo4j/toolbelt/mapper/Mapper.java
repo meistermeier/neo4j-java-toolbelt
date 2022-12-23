@@ -17,6 +17,9 @@ import java.util.function.Function;
  */
 public class Mapper {
 
+	/**
+	 * A prepared {@link Mapper} instance.
+	 */
 	public final static Mapper INSTANCE = new Mapper();
 
 	private final ObjectInstantiator objectInstantiator = new ObjectInstantiator();
@@ -27,30 +30,46 @@ public class Mapper {
 		this.converters = new Converters();
 	}
 
-	public <T> Function<Record, T> createConverterFor(Class<T> aClass) {
-		return record -> convertOne(record, aClass);
+	/**
+	 * Create a mapper for the requested type.
+	 * Can be reused.
+	 *
+	 * @param type Type to create the mapping function for.
+	 * @param <T>  Type definition
+	 * @return Function that is capable of mapping the result into the desired type.
+	 */
+	public <T> Function<Record, T> createMapperFor(Class<T> type) {
+		return record -> mapOne(record, type);
 	}
 
-	public <T> Function<Record, Iterable<T>> createCollectionConverterFor(Class<T> aClass) {
-		return record -> convertAll(record, aClass);
+	/**
+	 * Create a mapper for a collection of the requested type.
+	 * Can be reused.
+	 *
+	 * @param type Type to create the mapping function for.
+	 * @param <T>  Type definition
+	 * @return Function that is capable of mapping the result into the desired type.
+	 */
+	public <T> Function<Record, Iterable<T>> createCollectionMapperFor(Class<T> type) {
+		return record -> mapAll(record, type);
 	}
 
-	<T> T convertOne(MapAccessor mapAccessor, Class<T> type) {
- 		if (mapAccessor instanceof Value value) {
+	<T> T mapOne(MapAccessor mapAccessor, Class<T> type) {
+		if (mapAccessor instanceof Value value) {
 			if (converters.canConvert(value, type)) {
 				return converters.convert(value, type);
 			}
 		}
-		return (T) objectInstantiator.createInstance(type, typeSystem, this::convertOne).apply(mapAccessor);
+		return (T) objectInstantiator.createInstance(type, typeSystem, this::mapOne).apply(mapAccessor);
 	}
 
-	private <T> Iterable<T> convertAll(Record record, Class<T> type) {
+	private <T> Iterable<T> mapAll(Record record, Class<T> type) {
 		if (record.get(0).isNull()) {
 			return List.of();
 		}
 		if (typeSystem.LIST().isTypeOf(record.get(0))) {
-			return record.get(0).asList(nestedValue -> convertOne(nestedValue, type));
+			return record.get(0).asList(nestedValue -> mapOne(nestedValue, type));
 		}
-		return record.values(value -> convertOne(value, type));
+		return record.values(value -> mapOne(value, type));
 	}
 }

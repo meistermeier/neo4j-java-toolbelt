@@ -10,14 +10,18 @@ import java.util.Set;
  *
  * @author Gerrit Meier
  */
-public final class Converters {
+public final class Converters implements TypeConverter {
 
 	private final Set<TypeConverter> internalTypeConverters = new HashSet<>();
 
+	/**
+	 * Convenience constructor with default converters.
+	 */
 	public Converters() {
 		this.internalTypeConverters.add(new DriverTypeConverter());
 	}
 
+	@Override
 	public boolean canConvert(Value value, Class<?> type) {
 		for (TypeConverter typeConverter : internalTypeConverters) {
 			if (typeConverter.canConvert(value, type)) {
@@ -27,6 +31,7 @@ public final class Converters {
 		return false;
 	}
 
+	@Override
 	public <T> T convert(Value value, Class<T> type) {
 		for (TypeConverter typeConverter : internalTypeConverters) {
 			if (typeConverter.canConvert(value, type)) {

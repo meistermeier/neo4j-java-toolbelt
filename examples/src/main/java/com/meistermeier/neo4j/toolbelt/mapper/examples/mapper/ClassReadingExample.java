@@ -36,7 +36,7 @@ public class ClassReadingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Pet) return p").single();
-			Function<Record, Pet> PetConverter = mapper.createConverterFor(Pet.class);
+			Function<Record, Pet> PetConverter = mapper.createMapperFor(Pet.class);
 
 			Pet pet = PetConverter.apply(singleNode);
 
@@ -55,7 +55,7 @@ public class ClassReadingExample {
 
 		try (var session = driver.session()) {
 			List<Pet> pets = session.run("MATCH (p:Pet) return p")
-					.list(mapper.createConverterFor(Pet.class));
+					.list(mapper.createMapperFor(Pet.class));
 
 			logOutput(pets);
 		}
@@ -68,7 +68,7 @@ public class ClassReadingExample {
 
 		try (var session = driver.session()) {
 			Record PetCollectionRecord = session.run("MATCH (p:Pet) return collect(p)").single();
-			Iterable<Pet> pets = mapper.createCollectionConverterFor(Pet.class).apply(PetCollectionRecord);
+			Iterable<Pet> pets = mapper.createCollectionMapperFor(Pet.class).apply(PetCollectionRecord);
 
 			logOutput(pets);
 		}
@@ -81,7 +81,7 @@ public class ClassReadingExample {
 
 		try (var session = driver.session()) {
 			List<Iterable<Pet>> pets = session.run("MATCH (p:Pet) return collect(p)")
-					.list(mapper.createCollectionConverterFor(Pet.class));
+					.list(mapper.createCollectionMapperFor(Pet.class));
 
 			logOutput(pets);
 		}
@@ -93,7 +93,7 @@ public class ClassReadingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Pet) return p{.name, .yearBorn}").single();
-			Pet pet = mapper.createConverterFor(Pet.class).apply(singleNode);
+			Pet pet = mapper.createMapperFor(Pet.class).apply(singleNode);
 
 			logOutput(pet);
 		}
@@ -105,7 +105,7 @@ public class ClassReadingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Pet) return p.name as name, p.yearBorn as yearBorn").single();
-			Pet pet = mapper.createConverterFor(Pet.class).apply(singleNode);
+			Pet pet = mapper.createMapperFor(Pet.class).apply(singleNode);
 
 			logOutput(pet);
 		}

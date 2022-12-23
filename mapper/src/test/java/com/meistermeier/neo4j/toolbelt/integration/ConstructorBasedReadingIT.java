@@ -1,13 +1,11 @@
 package com.meistermeier.neo4j.toolbelt.integration;
 
-import com.meistermeier.neo4j.toolbelt.conversion.Converters;
 import com.meistermeier.neo4j.toolbelt.mapper.Mapper;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
-import org.neo4j.driver.types.TypeSystem;
 import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -41,7 +39,7 @@ public class ConstructorBasedReadingIT {
 	void mapRecordFromNode() {
 		try (var session = driver.session()) {
 			List<ConversionTargetRecord> result = session.run("MATCH (n:Node{a:'a1'}) return n")
-					.list(mapper.createConverterFor(ConversionTargetRecord.class));
+					.list(mapper.createMapperFor(ConversionTargetRecord.class));
 
 			assertThat(result).hasSize(1);
 			ConversionTargetRecord converted = result.get(0);
@@ -57,7 +55,7 @@ public class ConstructorBasedReadingIT {
 	void mapListOfRecordFromNode() {
 		try (var session = driver.session()) {
 			List<Iterable<ConversionTargetRecord>> result = session.run("MATCH (n:Node) return collect(n)")
-					.list(mapper.createCollectionConverterFor(ConversionTargetRecord.class));
+					.list(mapper.createCollectionMapperFor(ConversionTargetRecord.class));
 
 			assertThat(result).hasSize(1);
 			Iterable<ConversionTargetRecord> convertedClasses = result.get(0);
@@ -75,7 +73,7 @@ public class ConstructorBasedReadingIT {
 	void mapClassFromNode() {
 		try (var session = driver.session()) {
 			List<ConversionTargetClass> result = session.run("MATCH (n:Node{a:'a1'}) return n")
-					.list(mapper.createConverterFor(ConversionTargetClass.class));
+					.list(mapper.createMapperFor(ConversionTargetClass.class));
 
 			assertThat(result).hasSize(1);
 			ConversionTargetClass converted = result.get(0);
@@ -91,7 +89,7 @@ public class ConstructorBasedReadingIT {
 	void mapListOfClassFromNode() {
 		try (var session = driver.session()) {
 			List<Iterable<ConversionTargetClass>> result = session.run("MATCH (n:Node) return collect(n)")
-					.list(mapper.createCollectionConverterFor(ConversionTargetClass.class));
+					.list(mapper.createCollectionMapperFor(ConversionTargetClass.class));
 
 			assertThat(result).hasSize(1);
 			Iterable<ConversionTargetClass> convertedClasses = result.get(0);

@@ -57,7 +57,7 @@ class MapperTest {
 	@ParameterizedTest
 	@MethodSource
 	void convertSimpleTypes(Value sourceValue, Object expected) {
-		Object result = mapper.convertOne(sourceValue, expected.getClass());
+		Object result = mapper.mapOne(sourceValue, expected.getClass());
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -99,7 +99,7 @@ class MapperTest {
 	@ParameterizedTest
 	@MethodSource
 	void convertListTypes(Value sourceValue, Object expected, Class<?> expectedClass) {
-		Object result = mapper.convertOne(sourceValue, expectedClass);
+		Object result = mapper.mapOne(sourceValue, expectedClass);
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -107,7 +107,7 @@ class MapperTest {
 	void convertOneFieldToRecord() {
 		MapAccessor record = Values.value(Map.of("a", "a"));
 
-		ConversionTargetRecord conversionTarget = mapper.convertOne(record, ConversionTargetRecord.class);
+		ConversionTargetRecord conversionTarget = mapper.mapOne(record, ConversionTargetRecord.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isNull();
 	}
@@ -116,7 +116,7 @@ class MapperTest {
 	void convertMultipleFieldsToRecord() {
 		MapAccessor record = Values.value(Map.of("a", "a", "b", "b"));
 
-		ConversionTargetRecord conversionTarget = mapper.convertOne(record, ConversionTargetRecord.class);
+		ConversionTargetRecord conversionTarget = mapper.mapOne(record, ConversionTargetRecord.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 	}
@@ -125,7 +125,7 @@ class MapperTest {
 	void convertCollectionFieldToRecord() {
 		MapAccessor record = Values.value(Map.of("a", "a", "b", "b", "c", Values.value("a", "b", "c")));
 
-		ConversionTargetRecord conversionTarget = mapper.convertOne(record, ConversionTargetRecord.class);
+		ConversionTargetRecord conversionTarget = mapper.mapOne(record, ConversionTargetRecord.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 		assertThat(conversionTarget.c)
@@ -137,7 +137,7 @@ class MapperTest {
 	void convertUnorderedFieldsToRecord() {
 		MapAccessor record = Values.value(Map.of("c", Values.value("a", "b", "c"), "a", "a", "b", "b"));
 
-		ConversionTargetRecord conversionTarget = mapper.convertOne(record, ConversionTargetRecord.class);
+		ConversionTargetRecord conversionTarget = mapper.mapOne(record, ConversionTargetRecord.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 		assertThat(conversionTarget.c)
@@ -149,7 +149,7 @@ class MapperTest {
 	void convertOneFieldToClass() {
 		MapAccessor record = Values.value(Map.of("a", "a"));
 
-		ConversionTargetClass conversionTarget = mapper.convertOne(record, ConversionTargetClass.class);
+		ConversionTargetClass conversionTarget = mapper.mapOne(record, ConversionTargetClass.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isNull();
 	}
@@ -158,7 +158,7 @@ class MapperTest {
 	void convertMultipleFieldsToClass() {
 		MapAccessor record = Values.value(Map.of("a", "a", "b", "b"));
 
-		ConversionTargetClass conversionTarget = mapper.convertOne(record, ConversionTargetClass.class);
+		ConversionTargetClass conversionTarget = mapper.mapOne(record, ConversionTargetClass.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 	}
@@ -167,7 +167,7 @@ class MapperTest {
 	void convertCollectionFieldToClass() {
 		MapAccessor record = Values.value(Map.of("a", "a", "b", "b", "c", Values.value("a", "b", "c")));
 
-		ConversionTargetClass conversionTarget = mapper.convertOne(record, ConversionTargetClass.class);
+		ConversionTargetClass conversionTarget = mapper.mapOne(record, ConversionTargetClass.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 		assertThat(conversionTarget.c)
@@ -179,7 +179,7 @@ class MapperTest {
 	void convertUnorderedFieldsToClass() {
 		MapAccessor record = Values.value(Map.of("c", Values.value("a", "b", "c"), "a", "a", "b", "b"));
 
-		ConversionTargetClass conversionTarget = mapper.convertOne(record, ConversionTargetClass.class);
+		ConversionTargetClass conversionTarget = mapper.mapOne(record, ConversionTargetClass.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 		assertThat(conversionTarget.c)

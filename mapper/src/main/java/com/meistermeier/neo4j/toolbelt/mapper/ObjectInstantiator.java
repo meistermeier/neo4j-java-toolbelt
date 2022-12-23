@@ -31,8 +31,8 @@ class ObjectInstantiator {
 	 *
 	 * @param entityClass Type to get the instance from.
 	 * @param typeSystem  Neo4j Java Driver's {@link TypeSystem}.
+	 * @param <T>         Type to process and return.
 	 * @return New populated instance of the defined type.
-	 * @param <T> Type to process and return.
 	 */
 	<T> Function<MapAccessor, T> createInstance(Class<T> entityClass, TypeSystem typeSystem, BiFunction<Value, Class<?>, Object> convertFunction) {
 		return record -> {
@@ -108,7 +108,8 @@ class ObjectInstantiator {
 					rawValues[i] = convertFunction.apply(value, getType(parameters[i]));
 				}
 				return instantiatingConstructor.newInstance(rawValues);
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
+					 InvocationTargetException e) {
 				throw new RuntimeException(e);
 			}
 		};
