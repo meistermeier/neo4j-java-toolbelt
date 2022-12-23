@@ -51,9 +51,9 @@ As you might have already interpreted the list correctly, the focus of this libr
 Add the dependency to your _pom.xml_ (or _build.gradle_, if you want) and add the following coordinates.
 
 ```xml
-<<dependency>
+<dependency>
     <groupId>com.meistermeier.neo4j.toolbelt</groupId>
-    <artifactId>mapper</artifactId>
+    <artifactId>neo4j-java-toolbelt-mapper</artifactId>
     <version>0.1.0</version>
 </dependency>
 ```

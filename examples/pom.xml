@@ -18,7 +18,7 @@
     <dependencies>
         <dependency>
             <groupId>com.meistermeier.neo4j.toolbelt</groupId>
-            <artifactId>mapper</artifactId>
+            <artifactId>neo4j-java-toolbelt-mapper</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>
