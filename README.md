@@ -48,17 +48,13 @@ As you might have already interpreted the list correctly, the focus of this libr
 
 ### Getting up to speed
 
-There will be a Maven release soon.
-Currently, I am working on the lean API before "release".
-You can just clone it and do a `mvn install`.
-
-With this, head over to your _pom.xml_ (or _build.gradle_, if you want) and add the following coordinates.
+Add the dependency to your _pom.xml_ (or _build.gradle_, if you want) and add the following coordinates.
 
 ```xml
 <<dependency>
     <groupId>com.meistermeier.neo4j.toolbelt</groupId>
     <artifactId>mapper</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
