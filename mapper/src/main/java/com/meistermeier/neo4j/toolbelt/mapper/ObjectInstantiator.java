@@ -17,6 +17,13 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * Instantiates objects from class or records and populates their fields,
+ * defined in the constructor parameter list.
+ * Will always use the most matching constructor compared by parameter names and returned fields.
+ *
+ * @author Gerrit Meier
+ */
 class ObjectInstantiator {
 
 	/**

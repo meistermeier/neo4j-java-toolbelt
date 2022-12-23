@@ -1,6 +1,7 @@
 package com.meistermeier.neo4j.toolbelt.integration;
 
-import com.meistermeier.neo4j.toolbelt.mapper.Converter;
+import com.meistermeier.neo4j.toolbelt.conversion.Converters;
+import com.meistermeier.neo4j.toolbelt.mapper.Mapper;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -19,13 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Gerrit Meier
  */
 @Testcontainers
-public class ConstructorBasedIT {
+public class ConstructorBasedReadingIT {
 
 	@Container
 	static final Neo4jContainer<?> container = new Neo4jContainer<>("neo4j:5")
 			.withoutAuthentication();
 
-	static final Converter converter = Converter.INSTANCE.apply(TypeSystem.getDefault());
+	static final Mapper mapper = Mapper.INSTANCE;
 
 	static Driver driver;
 
@@ -40,7 +41,7 @@ public class ConstructorBasedIT {
 	void mapRecordFromNode() {
 		try (var session = driver.session()) {
 			List<ConversionTargetRecord> result = session.run("MATCH (n:Node{a:'a1'}) return n")
-					.list(converter.createConverterFor(ConversionTargetRecord.class));
+					.list(mapper.createConverterFor(ConversionTargetRecord.class));
 
 			assertThat(result).hasSize(1);
 			ConversionTargetRecord converted = result.get(0);
@@ -56,7 +57,7 @@ public class ConstructorBasedIT {
 	void mapListOfRecordFromNode() {
 		try (var session = driver.session()) {
 			List<Iterable<ConversionTargetRecord>> result = session.run("MATCH (n:Node) return collect(n)")
-					.list(converter.createCollectionConverterFor(ConversionTargetRecord.class));
+					.list(mapper.createCollectionConverterFor(ConversionTargetRecord.class));
 
 			assertThat(result).hasSize(1);
 			Iterable<ConversionTargetRecord> convertedClasses = result.get(0);
@@ -74,7 +75,7 @@ public class ConstructorBasedIT {
 	void mapClassFromNode() {
 		try (var session = driver.session()) {
 			List<ConversionTargetClass> result = session.run("MATCH (n:Node{a:'a1'}) return n")
-					.list(converter.createConverterFor(ConversionTargetClass.class));
+					.list(mapper.createConverterFor(ConversionTargetClass.class));
 
 			assertThat(result).hasSize(1);
 			ConversionTargetClass converted = result.get(0);
@@ -90,7 +91,7 @@ public class ConstructorBasedIT {
 	void mapListOfClassFromNode() {
 		try (var session = driver.session()) {
 			List<Iterable<ConversionTargetClass>> result = session.run("MATCH (n:Node) return collect(n)")
-					.list(converter.createCollectionConverterFor(ConversionTargetClass.class));
+					.list(mapper.createCollectionConverterFor(ConversionTargetClass.class));
 
 			assertThat(result).hasSize(1);
 			Iterable<ConversionTargetClass> convertedClasses = result.get(0);

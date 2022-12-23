@@ -5,6 +5,7 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 public class Environment {
@@ -13,7 +14,8 @@ public class Environment {
 
 	static {
 		try {
-			PROPERTIES.load(Environment.class.getResourceAsStream("/example.properties"));
+			InputStream propertyFile = Environment.class.getResourceAsStream("/example.properties");
+			PROPERTIES.load(propertyFile);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

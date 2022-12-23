@@ -7,11 +7,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.Values;
 import org.neo4j.driver.types.MapAccessor;
-import org.neo4j.driver.types.TypeSystem;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -19,14 +21,17 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ConverterTest {
+class MapperTest {
 
-	Converter converter = Converter.INSTANCE.apply(TypeSystem.getDefault());
+	Mapper mapper = Mapper.INSTANCE;
 
 	private static Stream<Arguments> convertSimpleTypes() {
 		LocalDate localDate = LocalDate.now();
 		LocalDateTime localDateTime = LocalDateTime.now();
 		LocalTime localTime = LocalTime.now();
+		OffsetDateTime offsetDateTime = OffsetDateTime.now();
+		OffsetTime offsetTime = OffsetTime.now();
+		ZonedDateTime zonedDateTime = ZonedDateTime.now();
 		return Stream.of(
 				Arguments.of(Values.value(1L), 1L),
 				Arguments.of(Values.value("Test"), "Test"),
@@ -36,7 +41,10 @@ class ConverterTest {
 				Arguments.of(Values.value(4d), 4d),
 				Arguments.of(Values.value(localDate), localDate),
 				Arguments.of(Values.value(localDateTime), localDateTime),
-				Arguments.of(Values.value(localTime), localTime)
+				Arguments.of(Values.value(localTime), localTime),
+				Arguments.of(Values.value(offsetDateTime), offsetDateTime),
+				Arguments.of(Values.value(offsetTime), offsetTime),
+				Arguments.of(Values.value(zonedDateTime), zonedDateTime)
 		);
 	}
 
@@ -49,7 +57,7 @@ class ConverterTest {
 	@ParameterizedTest
 	@MethodSource
 	void convertSimpleTypes(Value sourceValue, Object expected) {
-		Object result = converter.convertOne(sourceValue, expected.getClass());
+		Object result = mapper.convertOne(sourceValue, expected.getClass());
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -60,6 +68,12 @@ class ConverterTest {
 		LocalDateTime localDateTime2 = localDateTime1.plus(1, ChronoUnit.DAYS);
 		LocalTime localTime1 = LocalTime.now();
 		LocalTime localTime2 = localTime1.plus(1, ChronoUnit.HOURS);
+		OffsetDateTime offsetDateTime1 = OffsetDateTime.now();
+		OffsetDateTime offsetDateTime2 = offsetDateTime1.plus(1, ChronoUnit.DAYS);
+		OffsetTime offsetTime1 = OffsetTime.now();
+		OffsetTime offsetTime2 = offsetTime1.plus(1, ChronoUnit.HOURS);
+		ZonedDateTime zonedDateTime1 = ZonedDateTime.now();
+		ZonedDateTime zonedDateTime2 = zonedDateTime1.plus(1, ChronoUnit.DAYS);
 		return Stream.of(
 				Arguments.of(Values.value(1L, 2L), List.of(1L, 2L), Long[].class),
 				Arguments.of(Values.value("Test1", "Test2"), List.of("Test1", "Test2"), String[].class),
@@ -69,7 +83,10 @@ class ConverterTest {
 				Arguments.of(Values.value(4d, 5d), List.of(4d, 5d), Double[].class),
 				Arguments.of(Values.value(List.of(localDate1, localDate2).toArray()), List.of(localDate1, localDate2), LocalDate[].class),
 				Arguments.of(Values.value(List.of(localDateTime1, localDateTime2).toArray()), List.of(localDateTime1, localDateTime2), LocalDateTime[].class),
-				Arguments.of(Values.value(List.of(localTime1, localTime2).toArray()), List.of(localTime1, localTime2), LocalTime[].class)
+				Arguments.of(Values.value(List.of(localTime1, localTime2).toArray()), List.of(localTime1, localTime2), LocalTime[].class),
+				Arguments.of(Values.value(List.of(offsetDateTime1, offsetDateTime2).toArray()), List.of(offsetDateTime1, offsetDateTime2), OffsetDateTime[].class),
+				Arguments.of(Values.value(List.of(offsetTime1, offsetTime2).toArray()), List.of(offsetTime1, offsetTime2), OffsetTime[].class),
+				Arguments.of(Values.value(List.of(zonedDateTime1, zonedDateTime2).toArray()), List.of(zonedDateTime1, zonedDateTime2), ZonedDateTime[].class)
 		);
 	}
 
@@ -82,7 +99,7 @@ class ConverterTest {
 	@ParameterizedTest
 	@MethodSource
 	void convertListTypes(Value sourceValue, Object expected, Class<?> expectedClass) {
-		Object result = converter.convertOne(sourceValue, expectedClass);
+		Object result = mapper.convertOne(sourceValue, expectedClass);
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -90,7 +107,7 @@ class ConverterTest {
 	void convertOneFieldToRecord() {
 		MapAccessor record = Values.value(Map.of("a", "a"));
 
-		ConversionTargetRecord conversionTarget = converter.convertOne(record, ConversionTargetRecord.class);
+		ConversionTargetRecord conversionTarget = mapper.convertOne(record, ConversionTargetRecord.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isNull();
 	}
@@ -99,7 +116,7 @@ class ConverterTest {
 	void convertMultipleFieldsToRecord() {
 		MapAccessor record = Values.value(Map.of("a", "a", "b", "b"));
 
-		ConversionTargetRecord conversionTarget = converter.convertOne(record, ConversionTargetRecord.class);
+		ConversionTargetRecord conversionTarget = mapper.convertOne(record, ConversionTargetRecord.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 	}
@@ -108,7 +125,7 @@ class ConverterTest {
 	void convertCollectionFieldToRecord() {
 		MapAccessor record = Values.value(Map.of("a", "a", "b", "b", "c", Values.value("a", "b", "c")));
 
-		ConversionTargetRecord conversionTarget = converter.convertOne(record, ConversionTargetRecord.class);
+		ConversionTargetRecord conversionTarget = mapper.convertOne(record, ConversionTargetRecord.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 		assertThat(conversionTarget.c)
@@ -120,7 +137,7 @@ class ConverterTest {
 	void convertUnorderedFieldsToRecord() {
 		MapAccessor record = Values.value(Map.of("c", Values.value("a", "b", "c"), "a", "a", "b", "b"));
 
-		ConversionTargetRecord conversionTarget = converter.convertOne(record, ConversionTargetRecord.class);
+		ConversionTargetRecord conversionTarget = mapper.convertOne(record, ConversionTargetRecord.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 		assertThat(conversionTarget.c)
@@ -132,7 +149,7 @@ class ConverterTest {
 	void convertOneFieldToClass() {
 		MapAccessor record = Values.value(Map.of("a", "a"));
 
-		ConversionTargetClass conversionTarget = converter.convertOne(record, ConversionTargetClass.class);
+		ConversionTargetClass conversionTarget = mapper.convertOne(record, ConversionTargetClass.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isNull();
 	}
@@ -141,7 +158,7 @@ class ConverterTest {
 	void convertMultipleFieldsToClass() {
 		MapAccessor record = Values.value(Map.of("a", "a", "b", "b"));
 
-		ConversionTargetClass conversionTarget = converter.convertOne(record, ConversionTargetClass.class);
+		ConversionTargetClass conversionTarget = mapper.convertOne(record, ConversionTargetClass.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 	}
@@ -150,7 +167,7 @@ class ConverterTest {
 	void convertCollectionFieldToClass() {
 		MapAccessor record = Values.value(Map.of("a", "a", "b", "b", "c", Values.value("a", "b", "c")));
 
-		ConversionTargetClass conversionTarget = converter.convertOne(record, ConversionTargetClass.class);
+		ConversionTargetClass conversionTarget = mapper.convertOne(record, ConversionTargetClass.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 		assertThat(conversionTarget.c)
@@ -162,7 +179,7 @@ class ConverterTest {
 	void convertUnorderedFieldsToClass() {
 		MapAccessor record = Values.value(Map.of("c", Values.value("a", "b", "c"), "a", "a", "b", "b"));
 
-		ConversionTargetClass conversionTarget = converter.convertOne(record, ConversionTargetClass.class);
+		ConversionTargetClass conversionTarget = mapper.convertOne(record, ConversionTargetClass.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
 		assertThat(conversionTarget.b).isEqualTo("b");
 		assertThat(conversionTarget.c)
@@ -184,5 +201,6 @@ class ConverterTest {
 			this.c = c;
 		}
 	}
+
 
 }

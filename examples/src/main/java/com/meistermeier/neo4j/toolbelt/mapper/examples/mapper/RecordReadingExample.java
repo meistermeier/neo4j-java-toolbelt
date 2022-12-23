@@ -1,18 +1,17 @@
-package com.meistermeier.neo4j.toolbelt.mapper.examples.records;
+package com.meistermeier.neo4j.toolbelt.mapper.examples.mapper;
 
-import com.meistermeier.neo4j.toolbelt.mapper.Converter;
+import com.meistermeier.neo4j.toolbelt.mapper.Mapper;
 import com.meistermeier.neo4j.toolbelt.mapper.examples.shared.Environment;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
-import org.neo4j.driver.types.TypeSystem;
 
 import java.util.List;
 import java.util.function.Function;
 
-public class RecordMappingExample {
+public class RecordReadingExample {
 
 	private static final StackWalker walker = StackWalker.getInstance();
-	private static final Converter converter = Converter.INSTANCE.apply(TypeSystem.getDefault());
+	private static final Mapper mapper = Mapper.INSTANCE;
 
 	public static void main(String[] args) {
 		Driver driver = Environment.getDriver();
@@ -36,7 +35,7 @@ public class RecordMappingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Person) return p").single();
-			Function<Record, Person> personConverter = converter.createConverterFor(Person.class);
+			Function<Record, Person> personConverter = mapper.createConverterFor(Person.class);
 
 			Person person = personConverter.apply(singleNode);
 
@@ -55,7 +54,7 @@ public class RecordMappingExample {
 
 		try (var session = driver.session()) {
 			List<Person> people = session.run("MATCH (p:Person) return p")
-					.list(converter.createConverterFor(Person.class));
+					.list(mapper.createConverterFor(Person.class));
 
 			logOutput(people);
 		}
@@ -68,7 +67,7 @@ public class RecordMappingExample {
 
 		try (var session = driver.session()) {
 			Record personCollectionRecord = session.run("MATCH (p:Person) return collect(p)").single();
-			Iterable<Person> people = converter.createCollectionConverterFor(Person.class).apply(personCollectionRecord);
+			Iterable<Person> people = mapper.createCollectionConverterFor(Person.class).apply(personCollectionRecord);
 
 			logOutput(people);
 		}
@@ -81,7 +80,7 @@ public class RecordMappingExample {
 
 		try (var session = driver.session()) {
 			List<Iterable<Person>> people = session.run("MATCH (p:Person) return collect(p)")
-					.list(converter.createCollectionConverterFor(Person.class));
+					.list(mapper.createCollectionConverterFor(Person.class));
 
 			logOutput(people);
 		}
@@ -93,7 +92,7 @@ public class RecordMappingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Person) return p{.name, .yearBorn}").single();
-			Person person = converter.createConverterFor(Person.class).apply(singleNode);
+			Person person = mapper.createConverterFor(Person.class).apply(singleNode);
 
 			logOutput(person);
 		}
@@ -105,7 +104,7 @@ public class RecordMappingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Person) return p.name as name, p.yearBorn as yearBorn").single();
-			Person person = converter.createConverterFor(Person.class).apply(singleNode);
+			Person person = mapper.createConverterFor(Person.class).apply(singleNode);
 
 			logOutput(person);
 		}
