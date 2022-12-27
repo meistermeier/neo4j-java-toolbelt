@@ -1,0 +1,167 @@
+= Neo4j Java tool belt
+Gerrit Meier <meistermeier@gmail.com>
+:toc: left
+:doctype: book
+:source-highlighter: rouge
+:listing-caption: Listing
+
+:current-version: 0.1.0
+
+== About
+
+NOTE: The project itself is not an official Neo4j library.
+
+This project can be seen as a companion library for the official https://github.com/neo4j/neo4j-java-driver[Neo4j Java Driver].
+It does not aim to replace or wrap functionality of the driver, but instead enriches already existing mechanisms.
+
+The core idea (from today's perspective) is to take some concepts and learnings of object-graph-mapping libraries
+like https://github.com/neo4j/neo4j-ogm[Neo4j-OGM] or https://github.com/spring-projects/spring-data-neo4j[Spring Data Neo4j]
+and re-assemble them into light-weight modules.
+
+Namely, those parts are currently:
+
+* Read-only mapper
++
+Converts Java driver's records into Java objects.
+* Parameter renderer
++
+Serializes a given Java object into a Java driver `Value` map.
+
+Feel free to provide feedback and ideas or in general contributions at https://github.com/meistermeier/neo4j-java-toolbelt.
+
+== Dependencies
+
+The mapper and renderer are currently part of the very same artifact: `neo4j-java-toolbelt-mapper`.
+This might change in the future or the combined artifact will get renamed.
+
+[source,xml,subs="+attributes"]
+.Maven dependency
+----
+<dependency>
+    <groupId>com.meistermeier.neo4j.toolbelt</groupId>
+    <artifactId>neo4j-java-toolbelt-mapper</artifactId>
+    <version>{current-version}</version>
+</dependency>
+----
+
+//todo gradle dependency definition
+
+== Mapper
+
+The mapper is meant for converting Neo4j Java driver's `Record` into Java objects.
+It generates a _typed_ `Function<Record, T>` that can be provided to the driver's `Result#list` method.
+
+The supported return patterns are:
+
+* Node(s)
+* Values
+* Map structure
+
+Because the library wants to avoid any effect on the application code, there are no annotations or other kind meta-information.
+This leads to the question: What does get mapped in the end?
+The answer to this is pretty simple.
+The node's properties, values names or keys in the map structure have to match the names of the defined parameter in the constructor of the target record/class.
+
+Also, the mapper does not take care about post-initialization population of properties.
+There is only one mapping phase per instance and this is the instantiation via the best-matching constructor (type and name wise).
+
+NOTE: If you are working with classes, you need to compile your application with `-parameters` to preserve the constructor's parameter names.
+Otherwise, the mapper cannot link the right values.
+
+=== Example
+
+To get started, a node returned from the driver, should get mapped into a record with two fields.
+
+[source,java,indent=0]
+.Record for mapping
+----
+include::../examples/src/main/java/com/meistermeier/neo4j/toolbelt/examples/mapper/Person.java[tag=map-record]
+----
+
+To retrieve the mapping function, the `Mapper` class provides a `createMapper` method.
+Called with the matching type, it generates the right mapping function.
+
+[source,java,indent=0]
+.Generate mapping function
+----
+include::../examples/src/main/java/com/meistermeier/neo4j/toolbelt/examples/mapper/RecordReadingExample.java[tag=mapping-function]
+----
+
+This mapping function can be used in the `Result#list` function to map the individual `Records`.
+This does, of course, also work for single results with a list size of _1_.
+
+[source,java,indent=0]
+.Use mapping function in list function
+----
+include::../examples/src/main/java/com/meistermeier/neo4j/toolbelt/examples/mapper/RecordReadingExample.java[tag=mapping-function-list]
+----
+
+Since this is a Java standard `Function`, it can also get applied to the `Result#single` returning `Record`.
+
+[source,java,indent=0]
+.Apply mapping function to driver `Record`
+----
+include::../examples/src/main/java/com/meistermeier/neo4j/toolbelt/examples/mapper/RecordReadingExample.java[tag=mapping-function-apply]
+----
+
+
+== Parameter Renderer
+
+With a `Renderer`, it is possible to render a class into a map of driver values.
+Those parameters can then be used within the driver's `Session#query` method.
+
+[source,java,indent=0]
+.Parameter providing record
+----
+include::../examples/src/main/java/com/meistermeier/neo4j/toolbelt/examples/parameters/ParameterRenderingExample.java[tag=parameter-record]
+----
+
+A populated instance of this type can then be handed over to the `Renderer` to get mapped into a driver `Value`.
+In detail, it will become a `MapValue` in this case.
+
+[source,java,indent=0]
+.Parameter record rendering
+----
+include::../examples/src/main/java/com/meistermeier/neo4j/toolbelt/examples/parameters/ParameterRenderingExample.java[tag=parameter-record-use]
+----
+
+The `Renderer` can also produce Cypher collections of rendered instances (for driver's experts: `ListValue`).
+By default, those collections are named _rows_.
+
+[source,java,indent=0]
+.Collection parameter rendering
+----
+include::../examples/src/main/java/com/meistermeier/neo4j/toolbelt/examples/parameters/ParameterRenderingExample.java[tag=parameter-record-collection-use]
+----
+
+In the example above the `Renderer#toParameters(Collection)` method is a shortcut for `Renderer#toParameters(Collection, String)`.
+It is possible to use the overloaded method directly and name the collection that gets rendered explicitly.
+
+[source,java,indent=0]
+.Named collection parameter rendering
+----
+include::../examples/src/main/java/com/meistermeier/neo4j/toolbelt/examples/parameters/ParameterRenderingExample.java[tag=parameter-record-named-collection-use]
+----
+
+== Supported types
+
+Although these are the supported types for the `Mapper`,
+the `Renderer` might not support some of them yet.
+
+|===
+| Java                    | Cypher/Driver
+
+| Long                    | Long
+| Integer                 | Long
+| Double                  | Double
+| Float                   | Double
+| String                  | String
+| Boolean                 | Boolean
+| LocalDate               | LocalDate
+| LocalDateTime           | LocalDateTime
+| LocalTime               | LocalTime
+| OffsetDateTime          | OffsetDateTime
+| OffsetTime              | OffsetTime
+| ZonedDateTime           | ZonedDateTime
+| List<> of everything ^^ | [] of everything ^^
+|===

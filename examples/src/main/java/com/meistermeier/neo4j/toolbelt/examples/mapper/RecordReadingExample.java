@@ -11,7 +11,6 @@ import java.util.function.Function;
 public class RecordReadingExample {
 
 	private static final StackWalker walker = StackWalker.getInstance();
-	private static final Mapper mapper = Mapper.INSTANCE;
 
 	public static void main(String[] args) {
 		Driver driver = Environment.getDriver();
@@ -34,13 +33,19 @@ public class RecordReadingExample {
 		driver.session().run("CREATE (:Person{name: 'Gerrit', yearBorn: 1983})").consume();
 
 		try (var session = driver.session()) {
+			// tag::mapping-function[]
+			Function<Record, Person> personConverter = Mapper.INSTANCE.createMapperFor(Person.class);
+			// end::mapping-function[]
+
+			// tag::mapping-function-apply[]
 			Record singleNode = session.run("MATCH (p:Person) return p").single();
-			Function<Record, Person> personConverter = mapper.createMapperFor(Person.class);
-
 			Person person = personConverter.apply(singleNode);
+			// end::mapping-function-apply[]
 
+			// tag::mapping-function-list[]
 			List<Person> people = session.run("MATCH (p:Person) return p")
 					.list(personConverter);
+			// end::mapping-function-list[]
 
 			logOutput(person);
 			logOutput(people);
@@ -54,7 +59,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			List<Person> people = session.run("MATCH (p:Person) return p")
-					.list(mapper.createMapperFor(Person.class));
+					.list(Mapper.INSTANCE.createMapperFor(Person.class));
 
 			logOutput(people);
 		}
@@ -67,7 +72,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			Record personCollectionRecord = session.run("MATCH (p:Person) return collect(p)").single();
-			Iterable<Person> people = mapper.createCollectionMapperFor(Person.class).apply(personCollectionRecord);
+			Iterable<Person> people = Mapper.INSTANCE.createCollectionMapperFor(Person.class).apply(personCollectionRecord);
 
 			logOutput(people);
 		}
@@ -80,7 +85,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			List<Iterable<Person>> people = session.run("MATCH (p:Person) return collect(p)")
-					.list(mapper.createCollectionMapperFor(Person.class));
+					.list(Mapper.INSTANCE.createCollectionMapperFor(Person.class));
 
 			logOutput(people);
 		}
@@ -92,7 +97,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Person) return p{.name, .yearBorn}").single();
-			Person person = mapper.createMapperFor(Person.class).apply(singleNode);
+			Person person = Mapper.INSTANCE.createMapperFor(Person.class).apply(singleNode);
 
 			logOutput(person);
 		}
@@ -104,7 +109,7 @@ public class RecordReadingExample {
 
 		try (var session = driver.session()) {
 			Record singleNode = session.run("MATCH (p:Person) return p.name as name, p.yearBorn as yearBorn").single();
-			Person person = mapper.createMapperFor(Person.class).apply(singleNode);
+			Person person = Mapper.INSTANCE.createMapperFor(Person.class).apply(singleNode);
 
 			logOutput(person);
 		}

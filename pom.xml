@@ -57,6 +57,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <neo4j-java-driver.version>5.3.1</neo4j-java-driver.version>
+        <asciidoctor-maven-plugin.version>2.2.2</asciidoctor-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -178,6 +179,36 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>docs</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctor-maven-plugin</artifactId>
+                        <version>${asciidoctor-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>convert-to-html</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>process-asciidoc</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceDirectory>docs/</sourceDirectory>
+                                    <outputDirectory>${project.build.directory}/html</outputDirectory>
+                                    <attributes>
+                                        <source-highlighter>rouge</source-highlighter>
+                                        <toc>left</toc>
+                                        <icons>font</icons>
+                                    </attributes>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

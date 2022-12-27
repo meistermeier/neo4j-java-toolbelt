@@ -122,7 +122,7 @@ and the inner `Iterable` as the returned type of the `createCollectionConverterF
 Also, there is a `RecordMapping` class in the _example_ folder.
 Check this out if you are having trouble, using the given API.
 
-## Parameter generator
+## Parameter renderer
 
 With a `Renderer`, it is possible to render a class into a map of driver values.
 Those parameters can be used within the Driver query.
@@ -171,4 +171,3 @@ Otherwise, the Java compiler will generate incrementing names in the bytecode.
 There is no concept of working with identifiers or similar.
 * True symmetrical converters.
 Currently only `Mapper` has a nice infrastructure.
-* Real documentation, not just this _README_.
