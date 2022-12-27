@@ -1,4 +1,4 @@
-package com.meistermeier.neo4j.toolbelt.mapper.examples.shared;
+package com.meistermeier.neo4j.toolbelt.examples.shared;
 
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;

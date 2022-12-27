@@ -1,4 +1,4 @@
-package com.meistermeier.neo4j.toolbelt.mapper.examples.mapper;
+package com.meistermeier.neo4j.toolbelt.examples.mapper;
 
 /**
  * @author Gerrit Meier

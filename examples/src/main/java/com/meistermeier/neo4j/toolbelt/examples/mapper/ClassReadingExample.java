@@ -1,7 +1,7 @@
-package com.meistermeier.neo4j.toolbelt.mapper.examples.mapper;
+package com.meistermeier.neo4j.toolbelt.examples.mapper;
 
 import com.meistermeier.neo4j.toolbelt.mapper.Mapper;
-import com.meistermeier.neo4j.toolbelt.mapper.examples.shared.Environment;
+import com.meistermeier.neo4j.toolbelt.examples.shared.Environment;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 
