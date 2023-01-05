@@ -37,7 +37,7 @@ import java.util.function.Predicate;
 class DriverTypeConverter implements TypeConverter {
 
 	private static final TypeSystem typeSystem = TypeSystem.getDefault();
-	private static final List<?> SUPPORTED_SOURCE_VALUES_TYPES = List.of(typeSystem.LIST());
+	private static final List<?> SUPPORTED_SOURCE_VALUES_TYPES = List.of(typeSystem.LIST(), typeSystem.NULL());
 
 	private static final Map<Class<?>, DriverTypeConversion> BASIC_CONVERSIONS = Map.of(
 			Long.class, conversion(Value::asObject, Long.class),
