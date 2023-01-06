@@ -51,7 +51,7 @@ public class EntityConverter implements TypeConverter<MapAccessor> {
 		Map<String, Object> recordMap = record.asMap();
 		if (recordMap.size() == 1) {
 			Value value = record.values().iterator().next();
-			if (value.type().equals(typeSystem.NODE()) || value.type().equals(typeSystem.MAP())) {
+			if (value.type().equals(typeSystem.NODE())) {
 				return objectInstantiator.createInstance(entityClass, converters).apply(value);
 			}
 		}
