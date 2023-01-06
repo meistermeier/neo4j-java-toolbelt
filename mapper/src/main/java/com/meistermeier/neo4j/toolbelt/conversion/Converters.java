@@ -73,10 +73,12 @@ public final class Converters {
 	}
 
 	/**
+	 * Checks of there is at least one converter for this type or value/type combination registered.
+	 *
 	 * @param value                value to check for. Can be null.
 	 * @param type                 type to check for.
 	 * @param genericTypeParameter generic type if type is generic
-	 * @return is there at least one converter that supports this type or type / value combination.
+	 * @return existence of a matching converter.
 	 */
 	public boolean canConvertToJava(Value value, Class<?> type, Class<?> genericTypeParameter) {
 		for (ValueConverter internalValueConverter : internalValueConverters) {
