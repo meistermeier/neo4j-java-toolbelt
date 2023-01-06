@@ -68,7 +68,7 @@ public final class Mapper {
 	}
 
 	private <T> T mapOne(MapAccessor mapAccessor, Class<T> type) {
-		return converters.convert(mapAccessor, type);
+		return converters.convert(mapAccessor, type, null);
 	}
 
 	private <T> Iterable<T> mapAll(Record record, Class<T> type) {

@@ -15,8 +15,6 @@
  */
 package com.meistermeier.neo4j.toolbelt.conversion;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -74,7 +72,7 @@ public class DriverValueConverterTest {
 	@ParameterizedTest
 	@MethodSource
 	void convertSimpleTypes(Value sourceValue, Object expected) {
-		Object result = driverValueConverter.convert(sourceValue, expected.getClass());
+		Object result = driverValueConverter.convert(sourceValue, expected.getClass(), null);
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -116,7 +114,7 @@ public class DriverValueConverterTest {
 	@ParameterizedTest
 	@MethodSource
 	void convertListTypes(Value sourceValue, Object expected, Class<?> expectedClass) {
-		Object result = driverValueConverter.convert(sourceValue, expectedClass);
+		Object result = driverValueConverter.convert(sourceValue, expectedClass, null);
 		assertThat(result).isEqualTo(expected);
 	}
 

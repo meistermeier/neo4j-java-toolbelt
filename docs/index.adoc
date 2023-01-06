@@ -68,6 +68,10 @@ There is only one mapping phase per instance and this is the instantiation via t
 NOTE: If you are working with classes, you need to compile your application with `-parameters` to preserve the constructor's parameter names.
 Otherwise, the mapper cannot link the right values.
 
+There is also support to map related nodes.
+To have an unambiguous definition, the result has to have the format `RETURN n, [relatedNode] as relatedNodes`
+where `relatedNodes` refers to the name of a `List<RelatedNodeType> relatedNodes` defined field.
+
 === Example
 
 To get started, a node returned from the driver, should get mapped into a record with two fields.
@@ -164,4 +168,5 @@ the `Renderer` might not support some of them yet.
 | OffsetTime              | OffsetTime
 | ZonedDateTime           | ZonedDateTime
 | List<> of everything ^^ | [] of everything ^^
+| List<RelatedNode>       | [] of nodes
 |===

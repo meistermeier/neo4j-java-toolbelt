@@ -64,28 +64,28 @@ final class DriverValueConverter implements ValueConverter {
 	);
 
 	@Override
-	public boolean canConvert(Value value, Class<?> type) {
+	public boolean canConvert(Value value, Class<?> type, Class<?> genericTypeParameter) {
 		return BASIC_CONVERSIONS.containsKey(type)
 				|| DATE_TIME_CONVERSIONS.containsKey(type)
-				|| SUPPORTED_SOURCE_VALUES_TYPES.contains(value.type())
+				|| SUPPORTED_SOURCE_VALUES_TYPES.contains(value.type()) && (genericTypeParameter == null || BASIC_CONVERSIONS.containsKey(genericTypeParameter) || DATE_TIME_CONVERSIONS.containsKey(genericTypeParameter))
 				|| (SOURCE_VALUE_TARGET_COMBINATION.containsKey(value.type()) && SOURCE_VALUE_TARGET_COMBINATION.containsValue(type));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T convert(Value value, Class<T> type) {
+	public <T> T convert(Value value, Class<T> type, Class<?> genericTypeParameter) {
 		if (value.isNull()) {
 			return null;
 		}
 		if (typeSystem.MAP().isTypeOf(value)) {
 			if (type.isAssignableFrom(Map.class)) {
 				// convert into simple map
-				return (T) value.asMap(mapValue -> convert(mapValue, String.class));
+				return (T) value.asMap(mapValue -> convert(mapValue, String.class, genericTypeParameter));
 			}
 		}
 
 		if (!type.isArray() && typeSystem.LIST().isTypeOf(value)) {
-			return (T) value.asList(nestedValue -> convert(nestedValue, type));
+			return (T) value.asList(nestedValue -> convert(nestedValue, genericTypeParameter, null));
 		}
 		for (DriverTypeConversion conversion : BASIC_CONVERSIONS.values()) {
 			if (conversion.predicate.test(type)) {
@@ -98,7 +98,7 @@ final class DriverValueConverter implements ValueConverter {
 			}
 		}
 		if (type.isArray() && typeSystem.LIST().isTypeOf(value)) {
-			return (T) value.asList(nestedValue -> convert(nestedValue, type.getComponentType()));
+			return (T) value.asList(nestedValue -> convert(nestedValue, type.getComponentType(), genericTypeParameter));
 		}
 		throw new ConversionException("Cannot convert %s to %s".formatted(value, type));
 	}

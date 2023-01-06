@@ -26,19 +26,21 @@ public interface TypeConverter<T> {
 	/**
 	 * Reports if this converter can convert the given type.
 	 *
-	 * @param value the value to convert
-	 * @param type  the field type the converter should convert the value to
+	 * @param value                the value to convert
+	 * @param type                 the field type the converter should convert the value to
+	 * @param genericTypeParameter generic type of the type, if needed/provided
 	 * @return true, if the converter takes responsibility for this type, otherwise false
 	 */
-	boolean canConvert(T value, Class<?> type);
+	boolean canConvert(T value, Class<?> type, Class<?> genericTypeParameter);
 
 	/**
 	 * Converts the given driver value into the requested type.
 	 *
-	 * @param value the value to convert
-	 * @param type  the field type the converter should convert the value to
-	 * @param <X>   Expected type of the returned object
+	 * @param <X>                  Expected type of the returned object
+	 * @param value                the value to convert
+	 * @param type                 the field type the converter should convert the value to
+	 * @param genericTypeParameter generic type of the type, if needed/provided
 	 * @return the converted value object
 	 */
-	<X> X convert(T value, Class<X> type);
+	<X> X convert(T value, Class<X> type, Class<?> genericTypeParameter);
 }

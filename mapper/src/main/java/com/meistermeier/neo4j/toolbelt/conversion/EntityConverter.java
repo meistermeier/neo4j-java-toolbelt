@@ -20,7 +20,11 @@ import org.neo4j.driver.Value;
 import org.neo4j.driver.types.MapAccessor;
 import org.neo4j.driver.types.TypeSystem;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Entity converter that delegates to the {@link ObjectInstantiator}
@@ -39,23 +43,46 @@ final class EntityConverter implements TypeConverter<MapAccessor> {
 	}
 
 	@Override
-	public boolean canConvert(MapAccessor mapAccessor, Class<?> type) {
+	public boolean canConvert(MapAccessor mapAccessor, Class<?> type, Class<?> genericTypeParameter) {
 		if (mapAccessor instanceof Value value) {
-			return typeSystem.NODE().isTypeOf(value) || typeSystem.MAP().isTypeOf(value);
+			return typeSystem.NODE().isTypeOf(value) || typeSystem.MAP().isTypeOf(value) || typeSystem.LIST().isTypeOf(value);
 		}
 		return mapAccessor instanceof Record;
 	}
 
 	@Override
-	public <T> T convert(MapAccessor record, Class<T> entityClass) {
-		Map<String, Object> recordMap = record.asMap();
-		if (recordMap.size() == 1) {
-			Value value = record.values().iterator().next();
-			if (value.type().equals(typeSystem.NODE())) {
-				return objectInstantiator.createInstance(entityClass, converters).apply(value);
+	public <T> T convert(MapAccessor mapAccessor, Class<T> entityClass, Class<?> genericTypeParameter) {
+		if (mapAccessor instanceof Value value && typeSystem.LIST().isTypeOf(value)) {
+			List<T> collectionEntities = new ArrayList<>();
+			for (Value ding : value.asList(Function.identity())) {
+				HeadAndTail headAndTail = HeadAndTail.from(ding, typeSystem);
+				T entity = (T) objectInstantiator.createInstance(genericTypeParameter, headAndTail.head(), headAndTail.tail(), converters);
+				collectionEntities.add(entity);
 			}
+			// yes, I know that List<T> is not <T> but ¯\_(ツ)_/¯
+			return (T) collectionEntities;
 		}
-		// plain property based result
-		return objectInstantiator.createInstance(entityClass, converters).apply(record);
+		HeadAndTail headAndTail = HeadAndTail.from(mapAccessor, typeSystem);
+		return objectInstantiator.createInstance(entityClass, headAndTail.head(), headAndTail.tail(), converters);
+	}
+
+	private record HeadAndTail(MapAccessor head, Map<String, MapAccessor> tail) {
+		static HeadAndTail from(MapAccessor mapAccessor, TypeSystem typeSystem) {
+			if (mapAccessor instanceof Value value && typeSystem.NODE().isTypeOf(value)) {
+				return new HeadAndTail(mapAccessor, Map.of());
+			}
+			for (Value value : mapAccessor.values()) {
+				if (typeSystem.NODE().isTypeOf(value)) {
+					// maybe there is a "faster" way of getting this values converted into MapAccessor
+					Map<String, Value> ding = mapAccessor.asMap(Function.identity());
+					var tailValue = ding.entrySet().stream()
+							.filter(entryToCheck -> entryToCheck.getValue() != value)
+							.collect(Collectors.toMap(Map.Entry::getKey, entry -> (MapAccessor) entry.getValue()));
+
+					return new HeadAndTail(value, tailValue);
+				}
+			}
+			return new HeadAndTail(mapAccessor, Map.of());
+		}
 	}
 }

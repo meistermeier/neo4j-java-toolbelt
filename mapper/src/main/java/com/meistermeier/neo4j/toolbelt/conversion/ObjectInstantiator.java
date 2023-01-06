@@ -16,6 +16,7 @@
 package com.meistermeier.neo4j.toolbelt.conversion;
 
 import org.neo4j.driver.Value;
+import org.neo4j.driver.Values;
 import org.neo4j.driver.types.MapAccessor;
 
 import java.lang.reflect.Constructor;
@@ -28,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Instantiates objects from class or records and populates their fields,
@@ -47,8 +47,8 @@ class ObjectInstantiator {
 	 * @param <T>         Type to process and return.
 	 * @return New populated instance of the defined type.
 	 */
-	<T> Function<MapAccessor, T> createInstance(Class<T> entityClass, Converters converters) {
-		return record -> {
+	<T> T createInstance(Class<T> entityClass, MapAccessor record, Map<String, MapAccessor> tail, Converters converters) {
+
 			Constructor<T> instantiatingConstructor = determineConstructor(entityClass, record.asMap());
 
 			Parameter[] parameters = instantiatingConstructor.getParameters();
@@ -57,21 +57,26 @@ class ObjectInstantiator {
 				Parameter parameter = parameters[i];
 				String parameterName = parameter.getName();
 				Value value = record.get(parameterName);
-				values[i] = value;
+				Class<?> parameterType = parameter.getType();
+				if (converters.canConvertToJava(value, parameterType, getType(parameters[i]))) {
+					values[i] = value;
+				} else if (parameterType.isAssignableFrom(List.class)) {
+					// look into the tail
+					values[i] = (Value) tail.getOrDefault(parameterName, Values.NULL);
+				}
 			}
 
 			try {
 				Object[] rawValues = new Object[values.length];
 				for (int i = 0; i < values.length; i++) {
 					Value value = values[i];
-					rawValues[i] = converters.convert(value, getType(parameters[i]));
+					rawValues[i] = converters.convert(value, parameters[i].getType(), getType(parameters[i]));
 				}
 				return instantiatingConstructor.newInstance(rawValues);
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
+			} catch (InstantiationException | IllegalAccessException |
 					 InvocationTargetException e) {
 				throw new RuntimeException(e);
 			}
-		};
 	}
 
 	/**
@@ -114,7 +119,7 @@ class ObjectInstantiator {
 
 	}
 
-	private static Class<?> getType(Parameter parameter) throws ClassNotFoundException {
+	private static Class<?> getType(Parameter parameter) {
 		if (parameter.getType().isAssignableFrom(Map.class)) {
 			return Map.class;
 		}

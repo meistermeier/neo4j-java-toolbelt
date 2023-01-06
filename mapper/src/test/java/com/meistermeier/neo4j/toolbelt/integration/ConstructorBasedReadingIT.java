@@ -46,14 +46,14 @@ public class ConstructorBasedReadingIT {
 	@BeforeAll
 	static void setupDriverAndData() {
 		driver = GraphDatabase.driver(container.getBoltUrl());
-		driver.session().run("CREATE (:Node{a: 'a1', b: 'b1', c: ['a1', 'b1', 'c1']})").consume();
+		driver.session().run("CREATE (:Node{a: 'a1', b: 'b1', c: ['a1', 'b1', 'c1']})-[:REL]->(:Dings{a:'relatedRecord'})").consume();
 		driver.session().run("CREATE (:Node{a: 'a2', b: 'b2', c: ['a2', 'b2', 'c2']})").consume();
 	}
 
 	@Test
 	void mapRecordFromNode() {
 		try (var session = driver.session()) {
-			List<ConversionTargetRecord> result = session.run("MATCH (n:Node{a:'a1'}) return n")
+			List<ConversionTargetRecord> result = session.run("MATCH (n:Node{a:'a1'})-->(relatedRecord) return n, [relatedRecord] as relatedRecord")
 					.list(mapper.createMapperFor(ConversionTargetRecord.class));
 
 			assertThat(result).hasSize(1);
@@ -63,6 +63,11 @@ public class ConstructorBasedReadingIT {
 			assertThat(converted.c())
 					.hasSize(3)
 					.containsExactly("a1", "b1", "c1");
+			assertThat(converted.relatedRecord())
+					.isNotNull()
+					.isNotEmpty()
+					.extracting("a")
+					.containsExactly("relatedRecord");
 		}
 	}
 
@@ -118,8 +123,9 @@ public class ConstructorBasedReadingIT {
 		}
 	}
 
-	public record ConversionTargetRecord(String a, String b, List<String> c) {
-	}
+	public record ConversionTargetRecord(String a, String b, List<String> c, List<RelatedRecord> relatedRecord) { }
+
+	public record RelatedRecord(String a) {}
 
 	public static class ConversionTargetClass {
 		public final String a;
