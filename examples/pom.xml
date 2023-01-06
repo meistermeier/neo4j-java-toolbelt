@@ -36,7 +36,7 @@
         <dependency>
             <groupId>com.meistermeier.neo4j.toolbelt</groupId>
             <artifactId>neo4j-java-toolbelt-mapper</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.neo4j.driver</groupId>

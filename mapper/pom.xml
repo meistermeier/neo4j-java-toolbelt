@@ -22,7 +22,7 @@
     <parent>
         <artifactId>neo4j-java-toolbelt-parent</artifactId>
         <groupId>com.meistermeier.neo4j.toolbelt</groupId>
-        <version>0.1.1-SNAPSHOT</version>
+        <version>0.1.2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

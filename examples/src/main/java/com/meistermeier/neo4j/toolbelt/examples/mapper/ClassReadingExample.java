@@ -39,7 +39,6 @@ public class ClassReadingExample {
 		mapMultipleListsOfNodes(driver);
 
 		// value based
-		mapFromValueMap(driver);
 		mapFromMultipleValues(driver);
 
 		driver.close();
@@ -99,18 +98,6 @@ public class ClassReadingExample {
 					.list(mapper.createCollectionMapperFor(Pet.class));
 
 			logOutput(pets);
-		}
-	}
-
-	public static void mapFromValueMap(Driver driver) {
-		driver.session().run("MATCH (n) detach delete n").consume();
-		driver.session().run("CREATE (:Pet{name: 'Luna', yearBorn: 2017})").consume();
-
-		try (var session = driver.session()) {
-			Record singleNode = session.run("MATCH (p:Pet) return p{.name, .yearBorn}").single();
-			Pet pet = mapper.createMapperFor(Pet.class).apply(singleNode);
-
-			logOutput(pet);
 		}
 	}
 

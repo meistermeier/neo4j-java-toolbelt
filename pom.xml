@@ -24,7 +24,7 @@
     <groupId>com.meistermeier.neo4j.toolbelt</groupId>
     <artifactId>neo4j-java-toolbelt-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.2-SNAPSHOT</version>
 
     <name>Neo4j Java tool belt</name>
     <description>Collection of various tooling around the Neo4j Java Driver</description>

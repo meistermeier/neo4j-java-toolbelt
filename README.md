@@ -10,6 +10,10 @@ See this as the _Plus! package for the driver_.
 This project is 100% officially unsupported by Neo4j.
 Just my hobby project.
 
+## Documentation
+
+For more usage information and examples, please go to https://meistermeier.github.io/neo4j-java-toolbelt.
+
 ## Read-Only Mapper
 
 ### Background / Thoughts
@@ -54,14 +58,14 @@ Add the dependency to your _pom.xml_ (or _build.gradle_, if you want) and add th
 <dependency>
     <groupId>com.meistermeier.neo4j.toolbelt</groupId>
     <artifactId>neo4j-java-toolbelt-mapper</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 </dependency>
 ```
 
 ### How to use this
 
 Mapping of returned data should be as unambiguous as possible.
-There are two methods in the `Mapper` that helps you mapping data.
+There are two methods in the `Mapper` that helps you to map data.
 The following snippets should give you the right impression:
 
 _Mapping from a node_
@@ -75,52 +79,6 @@ try (var session = driver.session()) {
     // Person[name:'Gerrit', yearBorn:'1983']
 }
 ```
-
-_Mapping from a value map_
-```java
-// with (:Person{name: 'Gerrit', yearBorn: 1983})
-Mapper mapper = Mapper.INSTANCE
-try (var session = driver.session()) {
-    Record singleNode = session.run("MATCH (p:Person) return p{.name, .yearBorn}").single();
-    // can also be used in the session.run().list() function
-    Person person = mapper.createConverterFor(Person.class).apply(singleNode);
-
-    // Person[name:'Gerrit', yearBorn:'1983']
-}
-```
-
-_Mapping from multiple values_
-```java
-// with (:Person{name: 'Gerrit', yearBorn: 1983})
-Mapper mapper = Mapper.INSTANCE
-try (var session = driver.session()) {
-    Record singleNode = session.run("MATCH (p:Person) return p.name as name, p.yearBorn as yearBorn").single();
-		// can also be used in the session.run().list() function
-    Person person = mapper.createConverterFor(Person.class).apply(singleNode);
-
-    // Person[name:'Gerrit', yearBorn:'1983']
-}
-```
-
-The second option is to map a collection of elements.
-Here is one example:
-
-```java
-// with (:Person{name: 'Gerrit', yearBorn: 1983}) / (:Person{name: 'Somebody', yearBorn: 1982}
-Mapper mapper = Mapper.INSTANCE
-try (var session = driver.session()){
-    List<Iterable<Person>> people=session.run("MATCH (p:Person) return collect(p)")
-        .list(mapper.createCollectionConverterFor(Person.class));
-	
-	// [[Person[name=Gerrit, yearBorn=1983], Person[name=Somebody, yearBorn=1982]]]
-};
-```
-What might look like a little convoluted here as the return type,
-is the outer `List` as the result of the driver's `Session#list` function
-and the inner `Iterable` as the returned type of the `createCollectionConverterFor` usage.
-
-Also, there is a `RecordMapping` class in the _example_ folder.
-Check this out if you are having trouble, using the given API.
 
 ## Parameter renderer
 
@@ -138,36 +96,3 @@ String result = session.run("RETURN $a as a").single().get("a").asString();
 
 // result = myValue
 ```
-
-## Supported types
-Supported types for reading and parameter rendering:
-
-| Java                    | Cypher/Driver       |
-|-------------------------|---------------------|
-| Long                    | Long                |
-| Integer                 | Long                |
-| Double                  | Double              |
-| Float                   | Double              |
-| String                  | String              |
-| Boolean                 | Boolean             |
-| LocalDate               | LocalDate           |
-| LocalDateTime           | LocalDateTime       |
-| LocalTime               | LocalTime           |
-| OffsetDateTime          | OffsetDateTime      |
-| OffsetTime              | OffsetTime          |
-| ZonedDateTime           | ZonedDateTime       |
-| List<> of everything ^^ | [] of everything ^^ |
-
-
-## (current) Limitations
-
-An unordered list of things that I might want to improve or add. Might as in: “If I see a real need”.
-
-* The whole mapping is constructor based.
-There is no properties population after initialisation.
-* For class instantiation, you have to compile your application with `-parameters`.
-Otherwise, the Java compiler will generate incrementing names in the bytecode.
-* If for whatever reasons the query returns the very same node in multiple records, those nodes will get mapped multiple times.
-There is no concept of working with identifiers or similar.
-* True symmetrical converters.
-Currently only `Mapper` has a nice infrastructure.
