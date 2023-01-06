@@ -16,6 +16,7 @@
 package com.meistermeier.neo4j.toolbelt.conversion;
 
 import org.neo4j.driver.Value;
+import org.neo4j.driver.types.Type;
 import org.neo4j.driver.types.TypeSystem;
 
 import java.time.LocalDate;
@@ -34,10 +35,11 @@ import java.util.function.Predicate;
  *
  * @author Gerrit Meier
  */
-class DriverTypeConverter implements TypeConverter {
+class DriverValueConverter implements ValueConverter {
 
 	private static final TypeSystem typeSystem = TypeSystem.getDefault();
-	private static final List<?> SUPPORTED_SOURCE_VALUES_TYPES = List.of(typeSystem.LIST(), typeSystem.NULL());
+	private static final List<Type> SUPPORTED_SOURCE_VALUES_TYPES = List.of(typeSystem.LIST(), typeSystem.NULL());
+	private static final Map<Type, ?> SOURCE_VALUE_TARGET_COMBINATION = Map.of(typeSystem.MAP(), Map.class);
 
 	private static final Map<Class<?>, DriverTypeConversion> BASIC_CONVERSIONS = Map.of(
 			Long.class, conversion(Value::asObject, Long.class),
@@ -63,9 +65,10 @@ class DriverTypeConverter implements TypeConverter {
 
 	@Override
 	public boolean canConvert(Value value, Class<?> type) {
-		return BASIC_CONVERSIONS.keySet().contains(type)
-				|| DATE_TIME_CONVERSIONS.keySet().contains(type)
-				|| SUPPORTED_SOURCE_VALUES_TYPES.contains(value.type());
+		return BASIC_CONVERSIONS.containsKey(type)
+				|| DATE_TIME_CONVERSIONS.containsKey(type)
+				|| SUPPORTED_SOURCE_VALUES_TYPES.contains(value.type())
+				|| (SOURCE_VALUE_TARGET_COMBINATION.containsKey(value.type()) && SOURCE_VALUE_TARGET_COMBINATION.containsValue(type));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -74,6 +77,13 @@ class DriverTypeConverter implements TypeConverter {
 		if (value.isNull()) {
 			return null;
 		}
+		if (typeSystem.MAP().isTypeOf(value)) {
+			if (type.isAssignableFrom(Map.class)) {
+				// convert into simple map
+				return (T) value.asMap(mapValue -> convert(mapValue, String.class));
+			}
+		}
+
 		if (!type.isArray() && typeSystem.LIST().isTypeOf(value)) {
 			return (T) value.asList(nestedValue -> convert(nestedValue, type));
 		}

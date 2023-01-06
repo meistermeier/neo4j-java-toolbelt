@@ -15,19 +15,14 @@
  */
 package com.meistermeier.neo4j.toolbelt.conversion;
 
+import org.neo4j.driver.Value;
+
 /**
- * Exception to be used by the {@link ValueConverter} implementing converters.
+ * Definition of a Neo4j Java driver value converter.
+ * An implementation must provide the methods {@code canConvert} and {@code convert}.
  *
  * @author Gerrit Meier
  */
-public class ConversionException extends RuntimeException {
+public interface ValueConverter extends TypeConverter<Value> {
 
-	/**
-	 * Default constructor that redirects to the generic {@link RuntimeException}.
-	 *
-	 * @param message Exception message
-	 */
-	public ConversionException(String message) {
-		super(message);
-	}
 }

@@ -16,6 +16,7 @@
 package com.meistermeier.neo4j.toolbelt.conversion;
 
 import org.neo4j.driver.Value;
+import org.neo4j.driver.types.MapAccessor;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -25,34 +26,33 @@ import java.util.Set;
  *
  * @author Gerrit Meier
  */
-public final class Converters implements TypeConverter {
+public final class Converters {
 
-	private final Set<TypeConverter> internalTypeConverters = new HashSet<>();
+	private final Set<ValueConverter> internalValueConverters = new HashSet<>();
+	private final Set<TypeConverter<MapAccessor>> internalTypeConverters = new HashSet<>();
 
 	/**
 	 * Convenience constructor with default converters.
 	 */
 	public Converters() {
-		this.internalTypeConverters.add(new DriverTypeConverter());
+		this.internalValueConverters.add(new DriverValueConverter());
+		this.internalTypeConverters.add(new EntityConverter(this));
 	}
 
-	@Override
-	public boolean canConvert(Value value, Class<?> type) {
-		for (TypeConverter typeConverter : internalTypeConverters) {
-			if (typeConverter.canConvert(value, type)) {
-				return true;
+	public <T> T convert(MapAccessor mapAccessor, Class<T> type) {
+		if (mapAccessor instanceof Value value) {
+			for (ValueConverter valueConverter : internalValueConverters) {
+				if (valueConverter.canConvert(value, type)) {
+					return valueConverter.convert(value, type);
+				}
 			}
 		}
-		return false;
-	}
+		for (TypeConverter<MapAccessor> typeConverter : internalTypeConverters) {
+			if (typeConverter.canConvert(mapAccessor, type)) {
+				return typeConverter.convert(mapAccessor, type);
+			}
+		}
 
-	@Override
-	public <T> T convert(Value value, Class<T> type) {
-		for (TypeConverter typeConverter : internalTypeConverters) {
-			if (typeConverter.canConvert(value, type)) {
-				return typeConverter.convert(value, type);
-			}
-		}
-		throw new ConversionException("Cannot convert %s to %s".formatted(value, type));
+		throw new ConversionException("Cannot convert %s to %s".formatted(mapAccessor, type));
 	}
 }

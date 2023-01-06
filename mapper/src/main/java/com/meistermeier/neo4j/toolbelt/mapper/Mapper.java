@@ -17,7 +17,6 @@ package com.meistermeier.neo4j.toolbelt.mapper;
 
 import com.meistermeier.neo4j.toolbelt.conversion.Converters;
 import org.neo4j.driver.Record;
-import org.neo4j.driver.Value;
 import org.neo4j.driver.types.MapAccessor;
 import org.neo4j.driver.types.TypeSystem;
 
@@ -37,7 +36,6 @@ public class Mapper {
 	 */
 	public final static Mapper INSTANCE = new Mapper();
 
-	private final ObjectInstantiator objectInstantiator = new ObjectInstantiator();
 	private final TypeSystem typeSystem = TypeSystem.getDefault();
 	private final Converters converters;
 
@@ -70,12 +68,7 @@ public class Mapper {
 	}
 
 	<T> T mapOne(MapAccessor mapAccessor, Class<T> type) {
-		if (mapAccessor instanceof Value value) {
-			if (converters.canConvert(value, type)) {
-				return converters.convert(value, type);
-			}
-		}
-		return (T) objectInstantiator.createInstance(type, typeSystem, this::mapOne).apply(mapAccessor);
+		return converters.convert(mapAccessor, type);
 	}
 
 	private <T> Iterable<T> mapAll(Record record, Class<T> type) {

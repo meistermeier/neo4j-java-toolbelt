@@ -150,7 +150,7 @@ class MapperTest {
 
 	@Test
 	void convertUnorderedFieldsToRecord() {
-		MapAccessor record = Values.value(Map.of("c", Values.value("a", "b", "c"), "a", "a", "b", "b"));
+		MapAccessor record = Values.value(Map.of("c", Values.value("a", "b", "c"), "a", "a", "b", "b", "d", Map.of("something", "d1")));
 
 		ConversionTargetRecord conversionTarget = mapper.mapOne(record, ConversionTargetRecord.class);
 		assertThat(conversionTarget.a).isEqualTo("a");
@@ -158,6 +158,9 @@ class MapperTest {
 		assertThat(conversionTarget.c)
 				.hasSize(3)
 				.containsExactly("a", "b", "c");
+		assertThat(conversionTarget.d)
+				.hasSize(1)
+				.containsEntry("something", "d1");
 	}
 
 	@Test
@@ -202,15 +205,15 @@ class MapperTest {
 				.containsExactly("a", "b", "c");
 	}
 
-	record ConversionTargetRecord(String a, String b, List<String> c) {
+	public record ConversionTargetRecord(String a, String b, List<String> c, Map<String, String> d) {
 	}
 
-	static class ConversionTargetClass {
+	public static class ConversionTargetClass {
 		public final String a;
 		public final String b;
 		public final List<String> c;
 
-		ConversionTargetClass(String a, String b, List<String> c) {
+		public ConversionTargetClass(String a, String b, List<String> c) {
 			this.a = a;
 			this.b = b;
 			this.c = c;

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.meistermeier.neo4j.toolbelt.mapper;
+package com.meistermeier.neo4j.toolbelt.conversion;
 
+import com.meistermeier.neo4j.toolbelt.conversion.Converters;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.types.MapAccessor;
-import org.neo4j.driver.types.TypeSystem;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -42,25 +41,37 @@ import java.util.function.Function;
 class ObjectInstantiator {
 
 	/**
-	 * Core mapping function for class/record based mapping.
+	 * Core entity instantiation function for class/record based mapping.
 	 *
 	 * @param entityClass Type to get the instance from.
-	 * @param typeSystem  Neo4j Java Driver's {@link TypeSystem}.
+	 * @param converters  Backreference to global converters for property conversion.
 	 * @param <T>         Type to process and return.
 	 * @return New populated instance of the defined type.
 	 */
-	<T> Function<MapAccessor, T> createInstance(Class<T> entityClass, TypeSystem typeSystem, BiFunction<Value, Class<?>, Object> convertFunction) {
+	<T> Function<MapAccessor, T> createInstance(Class<T> entityClass, Converters converters) {
 		return record -> {
 			Constructor<T> instantiatingConstructor = determineConstructor(entityClass, record.asMap());
-			Map<String, Object> recordMap = record.asMap();
-			if (recordMap.size() == 1) {
-				Value value = record.values().iterator().next();
-				if (value.type().equals(typeSystem.NODE()) || value.type().equals(typeSystem.MAP())) {
-					return mapAccessorMapper(instantiatingConstructor, convertFunction).apply(value);
-				}
+
+			Parameter[] parameters = instantiatingConstructor.getParameters();
+			Value[] values = new Value[parameters.length];
+			for (int i = 0; i < parameters.length; i++) {
+				Parameter parameter = parameters[i];
+				String parameterName = parameter.getName();
+				Value value = record.get(parameterName);
+				values[i] = value;
 			}
-			// plain property based result
-			return mapAccessorMapper(instantiatingConstructor, convertFunction).apply(record);
+
+			try {
+				Object[] rawValues = new Object[values.length];
+				for (int i = 0; i < values.length; i++) {
+					Value value = values[i];
+					rawValues[i] = converters.convert(value, getType(parameters[i]));
+				}
+				return instantiatingConstructor.newInstance(rawValues);
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
+					 InvocationTargetException e) {
+				throw new RuntimeException(e);
+			}
 		};
 	}
 
@@ -104,33 +115,10 @@ class ObjectInstantiator {
 
 	}
 
-	private static <T> Function<MapAccessor, T> mapAccessorMapper(Constructor<T> instantiatingConstructor, BiFunction<Value, Class<?>, Object> convertFunction) {
-		return record -> {
-
-			Parameter[] parameters = instantiatingConstructor.getParameters();
-			Value[] values = new Value[parameters.length];
-			for (int i = 0; i < parameters.length; i++) {
-				Parameter parameter = parameters[i];
-				String parameterName = parameter.getName();
-				Value value = record.get(parameterName);
-				values[i] = value;
-			}
-
-			try {
-				Object[] rawValues = new Object[values.length];
-				for (int i = 0; i < values.length; i++) {
-					Value value = values[i];
-					rawValues[i] = convertFunction.apply(value, getType(parameters[i]));
-				}
-				return instantiatingConstructor.newInstance(rawValues);
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
-					 InvocationTargetException e) {
-				throw new RuntimeException(e);
-			}
-		};
-	}
-
 	private static Class<?> getType(Parameter parameter) throws ClassNotFoundException {
+		if (parameter.getType().isAssignableFrom(Map.class)) {
+			return Map.class;
+		}
 		return parameter.getType().getTypeParameters().length == 0
 				? parameter.getType()
 				: (Class<?>) ((ParameterizedType) parameter.getParameterizedType()).getActualTypeArguments()[0];
