@@ -28,7 +28,7 @@ import java.util.Map;
  *
  * @author Gerrit Meier
  */
-public class EntityConverter implements TypeConverter<MapAccessor> {
+final class EntityConverter implements TypeConverter<MapAccessor> {
 
 	private final TypeSystem typeSystem = TypeSystem.getDefault();
 	private final ObjectInstantiator objectInstantiator = new ObjectInstantiator();

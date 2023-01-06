@@ -46,7 +46,7 @@ class Neo4jDriverModule extends SimpleModule {
 		addSerializer(LocalTime.class, new Neo4jTypeSerializer<>());
 	}
 
-	private class Neo4jTypeSerializer<T> extends JsonSerializer<T> {
+	private static class Neo4jTypeSerializer<T> extends JsonSerializer<T> {
 
 		@Override
 		public void serialize(T value, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {

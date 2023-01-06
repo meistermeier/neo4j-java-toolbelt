@@ -29,7 +29,7 @@ import java.util.function.Function;
  *
  * @author Gerrit Meier
  */
-public class Mapper {
+public final class Mapper {
 
 	/**
 	 * A prepared {@link Mapper} instance.
@@ -67,7 +67,7 @@ public class Mapper {
 		return record -> mapAll(record, type);
 	}
 
-	<T> T mapOne(MapAccessor mapAccessor, Class<T> type) {
+	private <T> T mapOne(MapAccessor mapAccessor, Class<T> type) {
 		return converters.convert(mapAccessor, type);
 	}
 

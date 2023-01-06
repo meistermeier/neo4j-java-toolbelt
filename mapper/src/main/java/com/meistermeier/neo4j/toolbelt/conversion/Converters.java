@@ -39,6 +39,14 @@ public final class Converters {
 		this.internalTypeConverters.add(new EntityConverter(this));
 	}
 
+	/**
+	 * Convert given value into target type.
+	 *
+	 * @param mapAccessor input value
+	 * @param type        target type
+	 * @param <T>         resulting target type
+	 * @return			  converted value or throws {@link ConversionException} if no suitable converter can be found
+	 */
 	public <T> T convert(MapAccessor mapAccessor, Class<T> type) {
 		if (mapAccessor instanceof Value value) {
 			for (ValueConverter valueConverter : internalValueConverters) {

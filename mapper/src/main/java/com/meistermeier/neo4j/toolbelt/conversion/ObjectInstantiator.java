@@ -15,7 +15,6 @@
  */
 package com.meistermeier.neo4j.toolbelt.conversion;
 
-import com.meistermeier.neo4j.toolbelt.conversion.Converters;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.types.MapAccessor;
 
@@ -75,10 +74,10 @@ class ObjectInstantiator {
 		};
 	}
 
-	@SuppressWarnings("unchecked")
 	/**
 	 * Find the constructor with the most matching parameter count.
 	 */
+	@SuppressWarnings("unchecked")
 	private <T> Constructor<T> determineConstructor(Class<T> clazz, Map<String, Object> propertyValue) {
 		Constructor<T>[] constructors = (Constructor<T>[]) clazz.getDeclaredConstructors();
 		Constructor<T> instantiatingConstructorCandidate = null;

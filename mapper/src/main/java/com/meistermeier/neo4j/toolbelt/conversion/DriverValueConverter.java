@@ -35,7 +35,7 @@ import java.util.function.Predicate;
  *
  * @author Gerrit Meier
  */
-class DriverValueConverter implements ValueConverter {
+final class DriverValueConverter implements ValueConverter {
 
 	private static final TypeSystem typeSystem = TypeSystem.getDefault();
 	private static final List<Type> SUPPORTED_SOURCE_VALUES_TYPES = List.of(typeSystem.LIST(), typeSystem.NULL());
