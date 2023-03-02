@@ -16,6 +16,7 @@
 package com.meistermeier.neo4j.toolbelt.conversion;
 
 import org.neo4j.driver.Value;
+import org.neo4j.driver.types.MapAccessor;
 
 /**
  * Definition of a Neo4j Java driver value converter.
@@ -24,5 +25,22 @@ import org.neo4j.driver.Value;
  * @author Gerrit Meier
  */
 public interface ValueConverter extends TypeConverter<Value> {
+
+	boolean canConvert(Value value, TypeMetaData<?> typeMetaData);
+
+	Object convert(Value value, TypeMetaData<?> typeMetaData);
+
+	@Override
+	default boolean canConvert(MapAccessor value, TypeMetaData<?> typeMetaData) {
+		if (!(value instanceof Value)) {
+			return false;
+		}
+		return canConvert((Value) value, typeMetaData);
+	}
+
+	@Override
+	default Object convert(MapAccessor value, TypeMetaData<?> typeMetaData) {
+		return convert((Value) value, typeMetaData);
+	}
 
 }

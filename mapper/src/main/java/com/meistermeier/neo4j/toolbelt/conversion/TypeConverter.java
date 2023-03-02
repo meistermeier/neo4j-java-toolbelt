@@ -15,32 +15,33 @@
  */
 package com.meistermeier.neo4j.toolbelt.conversion;
 
+import org.neo4j.driver.types.MapAccessor;
+
 /**
  * Definition of a type converter.
  * An implementation must provide the methods {@code canConvert} and {@code convert}.
+ * Currently, this converter definition is focused on the result mapping.
+ * As a consequence the type parameter cannot get lower than {@link MapAccessor}.
  *
  * @author Gerrit Meier
  */
-public interface TypeConverter<T> {
+public interface TypeConverter<T extends MapAccessor> {
 
 	/**
 	 * Reports if this converter can convert the given type.
 	 *
-	 * @param value                the value to convert
-	 * @param type                 the field type the converter should convert the value to
-	 * @param genericTypeParameter generic type of the type, if needed/provided
+	 * @param value        the value to convert
+	 * @param typeMetaData the target field type
 	 * @return true, if the converter takes responsibility for this type, otherwise false
 	 */
-	boolean canConvert(T value, Class<?> type, Class<?> genericTypeParameter);
+	boolean canConvert(MapAccessor value, TypeMetaData<?> typeMetaData);
 
 	/**
 	 * Converts the given driver value into the requested type.
 	 *
-	 * @param <X>                  Expected type of the returned object
-	 * @param value                the value to convert
-	 * @param type                 the field type the converter should convert the value to
-	 * @param genericTypeParameter generic type of the type, if needed/provided
+	 * @param value        the value to convert
+	 * @param typeMetaData the target field type
 	 * @return the converted value object
 	 */
-	<X> X convert(T value, Class<X> type, Class<?> genericTypeParameter);
+	Object convert(MapAccessor value, TypeMetaData<?> typeMetaData);
 }

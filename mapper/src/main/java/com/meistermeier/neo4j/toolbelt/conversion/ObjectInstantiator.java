@@ -43,11 +43,11 @@ class ObjectInstantiator {
 	 * Core entity instantiation function for class/record based mapping.
 	 *
 	 * @param entityClass Type to get the instance from.
-	 * @param converters  Backreference to global converters for property conversion.
+	 * @param converterRegistry  Backreference to global converters for property conversion.
 	 * @param <T>         Type to process and return.
 	 * @return New populated instance of the defined type.
 	 */
-	<T> T createInstance(Class<T> entityClass, MapAccessor record, Map<String, MapAccessor> tail, Converters converters) {
+	<T> T createInstance(Class<T> entityClass, MapAccessor record, Map<String, MapAccessor> tail, ConverterRegistry converterRegistry) {
 
 			Constructor<T> instantiatingConstructor = determineConstructor(entityClass, record.asMap());
 
@@ -58,7 +58,8 @@ class ObjectInstantiator {
 				String parameterName = parameter.getName();
 				Value value = record.get(parameterName);
 				Class<?> parameterType = parameter.getType();
-				if (converters.canConvertToJava(value, parameterType, getType(parameters[i]))) {
+				Object convert = converterRegistry.convert(value, parameterType, getType(parameters[i]));
+				if (convert != null) {
 					values[i] = value;
 				} else if (parameterType.isAssignableFrom(List.class)) {
 					// look into the tail
@@ -70,7 +71,7 @@ class ObjectInstantiator {
 				Object[] rawValues = new Object[values.length];
 				for (int i = 0; i < values.length; i++) {
 					Value value = values[i];
-					rawValues[i] = converters.convert(value, parameters[i].getType(), getType(parameters[i]));
+					rawValues[i] = converterRegistry.convert(value, parameters[i].getType(), getType(parameters[i]));
 				}
 				return instantiatingConstructor.newInstance(rawValues);
 			} catch (InstantiationException | IllegalAccessException |

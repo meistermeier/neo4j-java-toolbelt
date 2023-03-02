@@ -36,9 +36,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Gerrit Meier
  */
-public class DriverValueConverterTest {
+public class DriverValueConverterRegistryTest {
 
-	private final DriverValueConverter driverValueConverter = new DriverValueConverter();
+	private final ConverterRegistry registry = new ConverterRegistry();
+	private final DriverValueConverters driverValueConverters = new DriverValueConverters((mapAccessor, typeMetaData) -> registry.convert(mapAccessor, typeMetaData.type(), typeMetaData.genericType()));
 
 	private static Stream<Arguments> convertSimpleTypes() {
 		LocalDate localDate = LocalDate.now();
@@ -72,7 +73,8 @@ public class DriverValueConverterTest {
 	@ParameterizedTest
 	@MethodSource
 	void convertSimpleTypes(Value sourceValue, Object expected) {
-		Object result = driverValueConverter.convert(sourceValue, expected.getClass(), null);
+		TypeMetaData<?> typeMetaData = TypeMetaData.from(expected.getClass(), null);
+		Object result = driverValueConverters.convert(sourceValue, typeMetaData);
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -90,18 +92,18 @@ public class DriverValueConverterTest {
 		ZonedDateTime zonedDateTime1 = ZonedDateTime.now();
 		ZonedDateTime zonedDateTime2 = zonedDateTime1.plus(1, ChronoUnit.DAYS);
 		return Stream.of(
-				Arguments.of(Values.value(1L, 2L), List.of(1L, 2L), Long[].class),
-				Arguments.of(Values.value("Test1", "Test2"), List.of("Test1", "Test2"), String[].class),
-				Arguments.of(Values.value(true, false), List.of(true, false), Boolean[].class),
-				Arguments.of(Values.value(2, 3), List.of(2, 3), Integer[].class),
-				Arguments.of(Values.value(3f, 4f), List.of(3f, 4f), Float[].class),
-				Arguments.of(Values.value(4d, 5d), List.of(4d, 5d), Double[].class),
-				Arguments.of(Values.value(List.of(localDate1, localDate2).toArray()), List.of(localDate1, localDate2), LocalDate[].class),
-				Arguments.of(Values.value(List.of(localDateTime1, localDateTime2).toArray()), List.of(localDateTime1, localDateTime2), LocalDateTime[].class),
-				Arguments.of(Values.value(List.of(localTime1, localTime2).toArray()), List.of(localTime1, localTime2), LocalTime[].class),
-				Arguments.of(Values.value(List.of(offsetDateTime1, offsetDateTime2).toArray()), List.of(offsetDateTime1, offsetDateTime2), OffsetDateTime[].class),
-				Arguments.of(Values.value(List.of(offsetTime1, offsetTime2).toArray()), List.of(offsetTime1, offsetTime2), OffsetTime[].class),
-				Arguments.of(Values.value(List.of(zonedDateTime1, zonedDateTime2).toArray()), List.of(zonedDateTime1, zonedDateTime2), ZonedDateTime[].class)
+				Arguments.of(Values.value(1L, 2L), List.of(1L, 2L), Long.class),
+				Arguments.of(Values.value("Test1", "Test2"), List.of("Test1", "Test2"), String.class),
+				Arguments.of(Values.value(true, false), List.of(true, false), Boolean.class),
+				Arguments.of(Values.value(2, 3), List.of(2, 3), Integer.class),
+				Arguments.of(Values.value(3f, 4f), List.of(3f, 4f), Float.class),
+				Arguments.of(Values.value(4d, 5d), List.of(4d, 5d), Double.class),
+				Arguments.of(Values.value(List.of(localDate1, localDate2).toArray()), List.of(localDate1, localDate2), LocalDate.class),
+				Arguments.of(Values.value(List.of(localDateTime1, localDateTime2).toArray()), List.of(localDateTime1, localDateTime2), LocalDateTime.class),
+				Arguments.of(Values.value(List.of(localTime1, localTime2).toArray()), List.of(localTime1, localTime2), LocalTime.class),
+				Arguments.of(Values.value(List.of(offsetDateTime1, offsetDateTime2).toArray()), List.of(offsetDateTime1, offsetDateTime2), OffsetDateTime.class),
+				Arguments.of(Values.value(List.of(offsetTime1, offsetTime2).toArray()), List.of(offsetTime1, offsetTime2), OffsetTime.class),
+				Arguments.of(Values.value(List.of(zonedDateTime1, zonedDateTime2).toArray()), List.of(zonedDateTime1, zonedDateTime2), ZonedDateTime.class)
 		);
 	}
 
@@ -114,7 +116,8 @@ public class DriverValueConverterTest {
 	@ParameterizedTest
 	@MethodSource
 	void convertListTypes(Value sourceValue, Object expected, Class<?> expectedClass) {
-		Object result = driverValueConverter.convert(sourceValue, expectedClass, null);
+		TypeMetaData<?> typeMetaData = TypeMetaData.from(expected.getClass(), expectedClass);
+		Object result = driverValueConverters.convert(sourceValue, typeMetaData);
 		assertThat(result).isEqualTo(expected);
 	}
 

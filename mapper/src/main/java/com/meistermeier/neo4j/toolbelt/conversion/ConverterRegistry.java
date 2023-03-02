@@ -15,7 +15,6 @@
  */
 package com.meistermeier.neo4j.toolbelt.conversion;
 
-import org.neo4j.driver.Value;
 import org.neo4j.driver.types.MapAccessor;
 
 import java.util.HashSet;
@@ -26,17 +25,28 @@ import java.util.Set;
  *
  * @author Gerrit Meier
  */
-public final class Converters {
+public final class ConverterRegistry {
 
-	private final Set<ValueConverter> internalValueConverters = new HashSet<>();
+	private final Set<DriverValueConverters> internalValueConverters = new HashSet<>();
 	private final Set<TypeConverter<MapAccessor>> internalTypeConverters = new HashSet<>();
+	private final Set<TypeConverter<? extends MapAccessor>> customConverters = new HashSet<>();
 
 	/**
 	 * Convenience constructor with default converters.
 	 */
-	public Converters() {
-		this.internalValueConverters.add(new DriverValueConverter());
+	public ConverterRegistry() {
+		this.internalValueConverters.add(new DriverValueConverters((value, typeMetaData) -> convert(value, typeMetaData.type(), typeMetaData.genericType())));
 		this.internalTypeConverters.add(new EntityConverter(this));
+	}
+
+	private ConverterRegistry(TypeConverter<? extends MapAccessor> customConverter) {
+		customConverters.add(customConverter);
+		this.internalValueConverters.add(new DriverValueConverters((value, typeMetaData) -> convert(value, typeMetaData.type(), typeMetaData.genericType())));
+		this.internalTypeConverters.add(new EntityConverter(this));
+	}
+
+	public ConverterRegistry addCustomConverter(TypeConverter<? extends MapAccessor> customConverter) {
+		return new ConverterRegistry(customConverter);
 	}
 
 	/**
@@ -48,49 +58,32 @@ public final class Converters {
 	 * @param genericTypeParameter generic type of the base type, if needed/provided
 	 * @return converted value or throws {@link ConversionException} if no suitable converter can be found
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> T convert(MapAccessor mapAccessor, Class<T> type, Class<?> genericTypeParameter) {
+		TypeMetaData<?> typeMetaData = TypeMetaData.from(type, genericTypeParameter);
 		if (mapAccessor == null) {
 			return null;
 		}
-		if (mapAccessor instanceof Value value) {
-			if (value.isNull()) {
-				return null;
-			}
 
-			for (ValueConverter valueConverter : internalValueConverters) {
-				if (valueConverter.canConvert(value, type, genericTypeParameter)) {
-					return valueConverter.convert(value, type, genericTypeParameter);
-				}
+		for (TypeConverter<? extends MapAccessor> customTypeConverter : customConverters) {
+			if (customTypeConverter.canConvert(mapAccessor, typeMetaData)) {
+				return (T) customTypeConverter.convert(mapAccessor, typeMetaData);
 			}
 		}
+
+		for (DriverValueConverters valueConverter : internalValueConverters) {
+			if (valueConverter.canConvert(mapAccessor, typeMetaData)) {
+				return (T) valueConverter.convert(mapAccessor, typeMetaData);
+			}
+		}
+
 		for (TypeConverter<MapAccessor> typeConverter : internalTypeConverters) {
-			if (typeConverter.canConvert(mapAccessor, type, genericTypeParameter)) {
-				return typeConverter.convert(mapAccessor, type, genericTypeParameter);
+			if (typeConverter.canConvert(mapAccessor, typeMetaData)) {
+				return (T) typeConverter.convert(mapAccessor, typeMetaData);
 			}
 		}
 
 		throw new ConversionException("Cannot convert %s to %s".formatted(mapAccessor, type));
 	}
 
-	/**
-	 * Checks of there is at least one converter for this type or value/type combination registered.
-	 *
-	 * @param value                value to check for. Can be null.
-	 * @param type                 type to check for.
-	 * @param genericTypeParameter generic type if type is generic
-	 * @return existence of a matching converter.
-	 */
-	public boolean canConvertToJava(Value value, Class<?> type, Class<?> genericTypeParameter) {
-		for (ValueConverter internalValueConverter : internalValueConverters) {
-			if (internalValueConverter.canConvert(value, type, genericTypeParameter)) {
-				return true;
-			}
-		}
-		for (TypeConverter<MapAccessor> internalValueConverter : internalTypeConverters) {
-			if (internalValueConverter.canConvert(null, type, genericTypeParameter)) {
-				return true;
-			}
-		}
-		return false;
-	}
 }

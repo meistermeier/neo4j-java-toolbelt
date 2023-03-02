@@ -15,6 +15,8 @@
  */
 package com.meistermeier.neo4j.toolbelt.mapper;
 
+import com.meistermeier.neo4j.toolbelt.conversion.TypeMetaData;
+import com.meistermeier.neo4j.toolbelt.conversion.ValueConverter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.Values;
 import org.neo4j.driver.internal.InternalRecord;
+import org.neo4j.driver.types.TypeSystem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -112,13 +115,13 @@ class MapperTest {
 	@DisplayName("Class mapping")
 	class ClassMapping {
 
-		private final Function<Record, ConversionTargetClass> recordMapper = mapper.createMapperFor(ConversionTargetClass.class);
+		private final Function<Record, ConversionTargetClass> classMapper = mapper.createMapperFor(ConversionTargetClass.class);
 		
 		@Test
 		void convertOneFieldToClass() {
 			var record = asRecord(Map.of("a", "a"));
 
-			ConversionTargetClass conversionTarget = recordMapper.apply(record);
+			ConversionTargetClass conversionTarget = classMapper.apply(record);
 			assertThat(conversionTarget.a).isEqualTo("a");
 			assertThat(conversionTarget.b).isNull();
 		}
@@ -127,7 +130,7 @@ class MapperTest {
 		void convertMultipleFieldsToClass() {
 			var record = asRecord(Map.of("a", "a", "b", "b"));
 
-			ConversionTargetClass conversionTarget = recordMapper.apply(record);
+			ConversionTargetClass conversionTarget = classMapper.apply(record);
 			assertThat(conversionTarget.a).isEqualTo("a");
 			assertThat(conversionTarget.b).isEqualTo("b");
 		}
@@ -136,7 +139,7 @@ class MapperTest {
 		void convertCollectionFieldToClass() {
 			var record = asRecord(Map.of("a", "a", "b", "b", "c", Values.value("a", "b", "c")));
 
-			ConversionTargetClass conversionTarget = recordMapper.apply(record);
+			ConversionTargetClass conversionTarget = classMapper.apply(record);
 			assertThat(conversionTarget.a).isEqualTo("a");
 			assertThat(conversionTarget.b).isEqualTo("b");
 			assertThat(conversionTarget.c)
@@ -148,7 +151,7 @@ class MapperTest {
 		void convertMapFieldToClass() {
 			var record = asRecord(Map.of("d", Map.of("something", "d1")));
 
-			ConversionTargetClass conversionTarget = recordMapper.apply(record);
+			ConversionTargetClass conversionTarget = classMapper.apply(record);
 			assertThat(conversionTarget.d)
 					.hasSize(1)
 					.containsEntry("something", "d1");
@@ -158,7 +161,7 @@ class MapperTest {
 		void convertUnorderedFieldsToClass() {
 			var record = asRecord(Map.of("c", Values.value("a", "b", "c"), "a", "a", "b", "b", "d", Map.of("something", "d1")));
 
-			ConversionTargetClass conversionTarget = recordMapper.apply(record);
+			ConversionTargetClass conversionTarget = classMapper.apply(record);
 			assertThat(conversionTarget.a).isEqualTo("a");
 			assertThat(conversionTarget.b).isEqualTo("b");
 			assertThat(conversionTarget.c)
@@ -173,7 +176,7 @@ class MapperTest {
 		void ignoreUnknownValues() {
 			var record = asRecord(Map.of("aa", "a", "bb", "b", "cc", Values.value("a", "b", "c"), "dd", Map.of("something", "d1")));
 
-			ConversionTargetClass conversionTarget = recordMapper.apply(record);
+			ConversionTargetClass conversionTarget = classMapper.apply(record);
 			assertThat(conversionTarget.a).isNull();
 			assertThat(conversionTarget.b).isNull();
 			assertThat(conversionTarget.c).isNull();
@@ -193,6 +196,35 @@ class MapperTest {
 				this.d = d;
 			}
 		}
+	}
+
+	@Nested
+	@DisplayName("Custom conversion")
+	class CustomConversion {
+
+		@Test
+		void usesCustomStringValueConvert() {
+			var typeConverter = new ValueConverter() {
+
+				@Override
+				public boolean canConvert(Value value, TypeMetaData<?> typeMetaData) {
+					return TypeSystem.getDefault().STRING().equals(value.type());
+				}
+
+				@Override
+				public String convert(Value value, TypeMetaData<?> typeMetaData) {
+					return "Something";
+				}
+			};
+
+			assertThat(mapper.withCustomConverter(typeConverter)
+					.createMapperFor(CustomConversionRecord.class)
+					.apply(asRecord(Map.of("someString", "with Value"))))
+					.isEqualTo(new CustomConversionRecord("Something"));
+		}
+
+		public record CustomConversionRecord(String someString) { }
+
 	}
 
 	static Record asRecord(Map<String, Object> values) {

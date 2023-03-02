@@ -36,34 +36,35 @@ final class EntityConverter implements TypeConverter<MapAccessor> {
 
 	private final TypeSystem typeSystem = TypeSystem.getDefault();
 	private final ObjectInstantiator objectInstantiator = new ObjectInstantiator();
-	private final Converters converters;
+	private final ConverterRegistry converterRegistry;
 
-	public EntityConverter(Converters converters) {
-		this.converters = converters;
+	public EntityConverter(ConverterRegistry converterRegistry) {
+		this.converterRegistry = converterRegistry;
 	}
 
 	@Override
-	public boolean canConvert(MapAccessor mapAccessor, Class<?> type, Class<?> genericTypeParameter) {
+	public boolean canConvert(MapAccessor mapAccessor, TypeMetaData<?> typeMetaData) {
 		if (mapAccessor instanceof Value value) {
 			return typeSystem.NODE().isTypeOf(value) || typeSystem.MAP().isTypeOf(value) || typeSystem.LIST().isTypeOf(value);
 		}
 		return mapAccessor instanceof Record;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T convert(MapAccessor mapAccessor, Class<T> entityClass, Class<?> genericTypeParameter) {
+	public  Object convert(MapAccessor mapAccessor, TypeMetaData<?> typeMetaData) {
 		if (mapAccessor instanceof Value value && typeSystem.LIST().isTypeOf(value)) {
-			List<T> collectionEntities = new ArrayList<>();
+			List<Object> collectionEntities = new ArrayList<>();
 			for (Value ding : value.asList(Function.identity())) {
 				HeadAndTail headAndTail = HeadAndTail.from(ding, typeSystem);
-				T entity = (T) objectInstantiator.createInstance(genericTypeParameter, headAndTail.head(), headAndTail.tail(), converters);
+				Object entity = objectInstantiator.createInstance(typeMetaData.genericType(), headAndTail.head(), headAndTail.tail(), converterRegistry);
 				collectionEntities.add(entity);
 			}
 			// yes, I know that List<T> is not <T> but ¯\_(ツ)_/¯
-			return (T) collectionEntities;
+			return collectionEntities;
 		}
 		HeadAndTail headAndTail = HeadAndTail.from(mapAccessor, typeSystem);
-		return objectInstantiator.createInstance(entityClass, headAndTail.head(), headAndTail.tail(), converters);
+		return objectInstantiator.createInstance(typeMetaData.type(), headAndTail.head(), headAndTail.tail(), converterRegistry);
 	}
 
 	private record HeadAndTail(MapAccessor head, Map<String, MapAccessor> tail) {

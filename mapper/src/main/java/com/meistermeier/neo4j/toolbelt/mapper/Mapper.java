@@ -15,7 +15,8 @@
  */
 package com.meistermeier.neo4j.toolbelt.mapper;
 
-import com.meistermeier.neo4j.toolbelt.conversion.Converters;
+import com.meistermeier.neo4j.toolbelt.conversion.ConverterRegistry;
+import com.meistermeier.neo4j.toolbelt.conversion.TypeConverter;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.types.MapAccessor;
 import org.neo4j.driver.types.TypeSystem;
@@ -37,10 +38,18 @@ public final class Mapper {
 	public final static Mapper INSTANCE = new Mapper();
 
 	private final TypeSystem typeSystem = TypeSystem.getDefault();
-	private final Converters converters;
+	private final ConverterRegistry converterRegistry;
 
 	private Mapper() {
-		this.converters = new Converters();
+		this.converterRegistry = new ConverterRegistry();
+	}
+
+	private Mapper(ConverterRegistry converterRegistry) {
+		this.converterRegistry = converterRegistry;
+	}
+
+	public Mapper withCustomConverter(TypeConverter<? extends MapAccessor> customConverter) {
+		return new Mapper(converterRegistry.addCustomConverter(customConverter));
 	}
 
 	/**
@@ -68,7 +77,7 @@ public final class Mapper {
 	}
 
 	private <T> T mapOne(MapAccessor mapAccessor, Class<T> type) {
-		return converters.convert(mapAccessor, type, null);
+		return converterRegistry.convert(mapAccessor, type, null);
 	}
 
 	private <T> Iterable<T> mapAll(Record record, Class<T> type) {
