@@ -1,5 +1,8 @@
 # Neo4j Java Driver Tool Belt
 
+> [!WARNING]
+> This repository is archived. There is now https://github.com/neo4j/neo4j-java-driver/pull/1633 which introduces about the same functionality in the official Neo4j Java Driver.
+
 This project consists right now of a read-only object mapper and a parameter renderer.
 The idea is to collect a bunch of tooling around the official [Neo4j Java Driver](https://neo4j.com/docs/java-manual/current/).
 If you're as old as me (or older), you might still remember _Windows 95 Plus!_.
